@@ -2,6 +2,7 @@ from pathlib import Path
 import os
 import sqlite3
 from functools import wraps
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from flask import Flask, jsonify, request, session, send_from_directory
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -41,8 +42,13 @@ class Database:
         if DATABASE_URL:
             import psycopg
             from psycopg.rows import dict_row
+            # The Supabase/Vercel integration can append a hint for Vercel's
+            # JavaScript driver; libpq/Psycopg rejects that unknown URI option.
+            parts = urlsplit(DATABASE_URL)
+            query = urlencode([(key, value) for key, value in parse_qsl(parts.query, keep_blank_values=True) if key != "workaround"])
+            postgres_url = urlunsplit((parts.scheme, parts.netloc, parts.path, query, parts.fragment))
             self.connection = psycopg.connect(
-                DATABASE_URL,
+                postgres_url,
                 row_factory=dict_row,
                 prepare_threshold=None,  # Supabase transaction pooler does not support prepared statements.
             )
