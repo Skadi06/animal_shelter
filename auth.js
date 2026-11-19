@@ -10,8 +10,10 @@ const escapeHtml = (value = "") => String(value).replace(/[&<>"']/g, (char) => (
 const formData = (form) => Object.fromEntries(new FormData(form).entries());
 
 async function api(path, options = {}) {
+  const method = options.method || (options.body ? "POST" : "GET");
   const response = await fetch(`/api/${path}`, {
     ...options,
+    method,
     headers: { "Content-Type": "application/json", ...(options.headers || {}) },
     body: options.body ? JSON.stringify(options.body) : undefined
   });
@@ -129,7 +131,7 @@ $("#auth-form").onsubmit = async (event) => {
   event.preventDefault();
   const data = formData(event.currentTarget);
   try {
-    const result = await api(signupMode ? "register" : "login", { email: data.email, password: data.password, name: data.name, role: data.role });
+    const result = await api(signupMode ? "register" : "login", { body: { email: data.email, password: data.password, name: data.name, role: data.role } });
     user = result.user;
     refreshRoleControls();
     authDialog.close();
