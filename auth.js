@@ -11,11 +11,12 @@ const formData = (form) => Object.fromEntries(new FormData(form).entries());
 
 async function api(path, options = {}) {
   const method = options.method || (options.body ? "POST" : "GET");
+  const isFormData = options.body instanceof FormData;
   const response = await fetch(`/api/${path}`, {
     ...options,
     method,
-    headers: { "Content-Type": "application/json", ...(options.headers || {}) },
-    body: options.body ? JSON.stringify(options.body) : undefined
+    headers: isFormData ? { ...(options.headers || {}) } : { "Content-Type": "application/json", ...(options.headers || {}) },
+    body: options.body ? (isFormData ? options.body : JSON.stringify(options.body)) : undefined
   });
   const responseText = await response.text();
   let data;
@@ -40,7 +41,7 @@ function refreshRoleControls() {
   const canManage = user && ["staff", "administrator"].includes(user.role);
   $("#admin-panel").hidden = !canManage;
   $("#admin-link").hidden = !canManage;
-  $("#animal-form").hidden = !user || user.role !== "administrator";
+  $("#animal-form").hidden = !user || !["staff", "administrator"].includes(user.role);
 }
 
 function animalCard(animal) {
@@ -49,7 +50,7 @@ function animalCard(animal) {
     <div class="animal-info"><div><h3>${escapeHtml(animal.name)}</h3><p>${escapeHtml(animal.breed)} · ${escapeHtml(animal.gender)}</p></div><span class="age">${escapeHtml(animal.age)}</span></div>
     <p class="animal-summary">${escapeHtml(animal.description)}</p><span class="status-badge status-${escapeHtml(animal.status.toLowerCase())}">${escapeHtml(animal.status)}</span>
     <div class="animal-actions"><button class="secondary-button" data-detail="${animal.id}">View profile</button><button class="secondary-button" data-favorite="${animal.id}" aria-label="Save ${escapeHtml(animal.name)}">♡ Save</button>${animal.status === "Available" ? `<button class="primary-button" data-adopt="${animal.id}">Apply to adopt</button>` : ""}</div>
-    ${user?.role === "administrator" ? `<div class="admin-animal-actions"><button data-edit="${animal.id}">Edit</button><button data-delete="${animal.id}">Remove</button></div>` : ""}</article>`;
+    ${user && ["staff", "administrator"].includes(user.role) ? `<div class="admin-animal-actions"><button data-edit="${animal.id}">Edit</button><button data-delete="${animal.id}">Remove</button></div>` : ""}</article>`;
 }
 
 async function loadAnimals() {
@@ -229,7 +230,7 @@ $("#contact-form").onsubmit = async (event) => {
   } catch (error) { showMessage($("#contact-message"), error.message, true); }
 };
 
-// Administrators can edit animal details and remove profiles.
+// Staff and administrators can edit animal details and remove profiles.
 $("#animal-grid").addEventListener("click", async (event) => {
   const editId = event.target.dataset.edit;
   const deleteId = event.target.dataset.delete;
@@ -248,9 +249,9 @@ $("#animal-grid").addEventListener("click", async (event) => {
 });
 $("#animal-form").onsubmit = async (event) => {
   event.preventDefault();
-  const data = formData(event.currentTarget);
-  const id = data.id;
-  delete data.id;
+  const data = new FormData(event.currentTarget);
+  const id = data.get("id");
+  data.delete("id");
   try {
     await api(id ? `admin/animals/${id}` : "admin/animals", { method: id ? "PUT" : "POST", body: data });
     event.currentTarget.reset();

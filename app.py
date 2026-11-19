@@ -1,14 +1,21 @@
 from pathlib import Path
+import json
+import mimetypes
 import os
 import sqlite3
+import uuid
 from functools import wraps
-from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
+from urllib.parse import parse_qsl, quote, urlencode, urlsplit, urlunsplit
+from urllib.error import HTTPError, URLError
+from urllib.request import Request, urlopen
 
 from flask import Flask, jsonify, request, session, send_from_directory
 from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 app.secret_key = "local-shelter-demo-key"
+app.config["MAX_CONTENT_LENGTH"] = 8 * 1024 * 1024
 ROOT = Path(__file__).resolve().parent
 DB_PATH = ROOT / "shelter.db"
 # Supabase's Vercel integration provides POSTGRES_URL; DATABASE_URL also works.
@@ -34,6 +41,11 @@ def check_vercel_database():
             if DATABASE_URL:
                 details = details.replace(DATABASE_URL, "[database URL hidden]")
             return jsonify(error=f"Database initialization failed ({type(error).__name__}): {details[:400]}"), 503
+
+
+@app.errorhandler(413)
+def image_too_large(_error):
+    return jsonify(error="That image is too large. Choose an image under 8 MB."), 413
 
 
 class Database:
@@ -206,6 +218,57 @@ def insert_id(conn, sql, values):
 
 def clean_animal(data):
     return {key: data.get(key, "") for key in ANIMAL_FIELDS}
+
+
+def storage_call(path, method="GET", body=None, content_type="application/json"):
+    """Call Supabase Storage using the server-side service-role key."""
+    project_url = os.environ.get("SUPABASE_URL", "").rstrip("/")
+    storage_key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY") or os.environ.get("SUPABASE_SECRET_KEY")
+    if not project_url or not storage_key:
+        raise ValueError("Supabase Storage is not configured. Check SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in Vercel.")
+    payload = json.dumps(body).encode() if isinstance(body, dict) else body
+    req = Request(
+        f"{project_url}/storage/v1/{path.lstrip('/')}",
+        data=payload,
+        method=method,
+        headers={
+            "apikey": storage_key,
+            "Authorization": f"Bearer {storage_key}",
+            "Content-Type": content_type,
+            "x-upsert": "true",
+        },
+    )
+    try:
+        with urlopen(req, timeout=20) as response:
+            return response.read()
+    except HTTPError as error:
+        details = error.read().decode("utf-8", errors="replace")
+        raise ValueError(f"Supabase Storage returned {error.code}: {details[:250]}") from error
+    except URLError as error:
+        raise ValueError(f"Could not reach Supabase Storage: {error.reason}") from error
+
+
+def upload_animal_photo(photo):
+    """Create a public animal-photo bucket if needed, then upload the image."""
+    allowed_types = {"image/jpeg", "image/png", "image/webp", "image/gif"}
+    content_type = photo.mimetype or mimetypes.guess_type(photo.filename or "")[0]
+    if content_type not in allowed_types:
+        raise ValueError("Choose a JPG, PNG, WebP, or GIF image.")
+
+    bucket = "animal-photos"
+    try:
+        storage_call(f"bucket/{bucket}")
+    except ValueError as error:
+        if "returned 404" not in str(error):
+            raise
+        storage_call("bucket", "POST", {"id": bucket, "name": bucket, "public": True})
+
+    safe_name = secure_filename(photo.filename or "animal-image")
+    suffix = Path(safe_name).suffix or mimetypes.guess_extension(content_type) or ".jpg"
+    object_name = f"{uuid.uuid4().hex}{suffix.lower()}"
+    storage_call(f"object/{bucket}/{quote(object_name)}", "POST", photo.read(), content_type)
+    project_url = os.environ["SUPABASE_URL"].rstrip("/")
+    return f"{project_url}/storage/v1/object/public/{bucket}/{object_name}"
 
 
 @app.get("/")
@@ -384,13 +447,24 @@ def update_application(kind, item_id):
 
 @app.route("/api/admin/animals", defaults={"animal_id": None}, methods=["POST"])
 @app.route("/api/admin/animals/<int:animal_id>", methods=["PUT", "DELETE"])
-@roles_required("administrator")
+@roles_required("staff", "administrator")
 def manage_animal(animal_id):
     with db() as conn:
         if request.method == "DELETE":
             conn.execute("DELETE FROM animals WHERE id=?", (animal_id,))
             return jsonify(ok=True)
-        animal = clean_animal(json_body())
+        data = request.form.to_dict() if request.mimetype == "multipart/form-data" else json_body()
+        animal = clean_animal(data)
+        photo = request.files.get("photo_upload")
+        if photo and photo.filename:
+            try:
+                animal["photo"] = upload_animal_photo(photo)
+            except ValueError as error:
+                return jsonify(error=str(error)), 400
+        elif request.method == "PUT":
+            previous = conn.execute("SELECT photo FROM animals WHERE id=?", (animal_id,)).fetchone()
+            if previous and not animal["photo"]:
+                animal["photo"] = previous["photo"]
         if not animal["name"]:
             return jsonify(error="Animal name is required."), 400
         if animal["status"] not in {"Available", "Pending", "Adopted"}:

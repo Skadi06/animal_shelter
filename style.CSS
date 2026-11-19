@@ -617,6 +617,8 @@ a {
 .form-card h3 { margin: 0 0 18px; font-family: 'Playfair Display', serif; font-size: 22px; }
 .form-card label { margin: 12px 0; }
 .form-card button { cursor: pointer; }
+.form-card input[type="file"] { padding: 9px; }
+.form-card label small { display: block; margin-top: 6px; color: #899087; font-weight: 400; }
 .form-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
 .volunteer-form, #contact-form { max-width: 900px; margin: 35px auto 0; }
 .form-message { min-height: 20px; margin-top: 10px; color: #315b43; font-size: 13px; }
