@@ -259,7 +259,8 @@ def upload_animal_photo(photo):
     try:
         storage_call(f"bucket/{bucket}")
     except ValueError as error:
-        if "returned 404" not in str(error):
+        missing_bucket = "NoSuchBucket" in str(error) or "Bucket not found" in str(error) or "returned 404" in str(error)
+        if not missing_bucket:
             raise
         storage_call("bucket", "POST", {"id": bucket, "name": bucket, "public": True})
 
