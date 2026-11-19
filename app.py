@@ -35,12 +35,9 @@ def check_vercel_database():
         try:
             init_db()
             _db_ready = True
-        except Exception as error:
+        except Exception:
             app.logger.exception("Database initialization failed")
-            details = str(error)
-            if DATABASE_URL:
-                details = details.replace(DATABASE_URL, "[database URL hidden]")
-            return jsonify(error=f"Database initialization failed ({type(error).__name__}): {details[:400]}"), 503
+            return jsonify(error="Database initialization failed. Check the Vercel function logs."), 503
 
 
 @app.errorhandler(413)

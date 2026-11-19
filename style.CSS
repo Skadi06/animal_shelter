@@ -89,29 +89,6 @@ a {
     cursor: pointer;
 }
 
-.auth-dialog {
-    width: min(440px, calc(100% - 32px));
-    margin: auto;
-    padding: 38px;
-    border: 0;
-    border-radius: 24px;
-    color: #263b32;
-    box-shadow: 0 24px 80px #14251d40;
-}
-
-.auth-dialog::backdrop { background: #14251d99; }
-.auth-dialog h2 { margin: 12px 0 6px; font-family: 'Playfair Display', serif; font-size: 32px; }
-.auth-intro { color: #788176; margin-bottom: 22px; }
-.auth-dialog label { display: block; margin: 14px 0 7px; font-size: 13px; font-weight: 700; }
-.auth-dialog input { width: 100%; padding: 13px 14px; border: 1px solid #d9ded6; border-radius: 10px; font: inherit; }
-.auth-dialog select { width: 100%; padding: 13px 14px; border: 1px solid #d9ded6; border-radius: 10px; background: white; font: inherit; }
-.auth-dialog input:focus { outline: 2px solid #76977e; border-color: transparent; }
-.auth-submit { width: 100%; border: 0; margin-top: 22px; cursor: pointer; }
-.auth-close { position: absolute; top: 12px; right: 16px; border: 0; background: none; font-size: 30px; cursor: pointer; color: #788176; }
-.auth-switch { display: block; margin: 18px auto 0; border: 0; background: none; color: #315b43; font: inherit; font-weight: 700; cursor: pointer; }
-.auth-message { min-height: 20px; margin-top: 12px; color: #315b43; font-size: 13px; line-height: 1.5; }
-.auth-message[data-error="true"] { color: #a63f35; }
-
 .login-button:hover {
     background: #edf0e8;
 }
@@ -327,20 +304,6 @@ a {
     border-radius: 20px;
     font-size: 11px;
     white-space: nowrap;
-}
-
-.adopt-link {
-    display: block;
-    padding: 12px 8px;
-    border-top: 1px solid #edf0e8;
-    color: #315b43;
-    font-weight: 700;
-    font-size: 13px;
-}
-
-.center-button {
-    text-align: center;
-    margin-top: 40px;
 }
 
 /* About */
@@ -597,7 +560,7 @@ a {
 /* Shelter portal features */
 [hidden] { display: none !important; }
 .animal-filters { display: grid; grid-template-columns: repeat(4, minmax(130px, 1fr)); gap: 14px; align-items: end; margin: 0 0 35px; padding: 22px; background: #edf0e8; border-radius: 18px; }
-.animal-filters label, .form-card label, .auth-dialog label, .application-dialog label { display: block; color: #536258; font-size: 13px; font-weight: 700; }
+.animal-filters label, .form-card label { display: block; color: #536258; font-size: 13px; font-weight: 700; }
 .animal-filters input, .animal-filters select, .form-card input, .form-card select, .form-card textarea, .application-dialog input, .application-dialog textarea { width: 100%; margin-top: 6px; padding: 11px 12px; border: 1px solid #d9ded6; border-radius: 9px; background: #fff; color: #263b32; font: inherit; }
 .animal-filters button { min-height: 44px; }
 .animal-summary { padding: 0 8px; color: #788176; font-size: 13px; line-height: 1.6; }
@@ -609,8 +572,7 @@ a {
 .animal-actions .primary-button { border: 0; }
 .admin-animal-actions { display: flex; gap: 10px; padding: 8px; }
 .admin-animal-actions button, .application-item button { color: #315b43; cursor: pointer; }
-.account-panel, .admin-panel { background: #fbf9f3; }
-.account-panel, .admin-panel { width: min(1180px, calc(100% - 32px)); max-height: 90vh; overflow: auto; margin: auto; padding: 50px 36px; border: 0; border-radius: 24px; color: #263b32; box-shadow: 0 24px 80px #14251d40; }
+.account-panel, .admin-panel { width: min(1180px, calc(100% - 32px)); max-height: 90vh; overflow: auto; margin: auto; padding: 50px 36px; border: 0; border-radius: 24px; background: #fbf9f3; color: #263b32; box-shadow: 0 24px 80px #14251d40; }
 .account-panel::backdrop, .admin-panel::backdrop { background: #14251d99; }
 .account-columns, .admin-columns { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 22px; margin-top: 25px; align-items: start; }
 .form-card { padding: 24px; border-radius: 18px; background: #fff; box-shadow: 0 8px 30px #263b320b; }
@@ -630,15 +592,18 @@ a {
 .contact-form-section .section-heading { grid-column: 1 / -1; }
 .contact-details { color: #68756b; line-height: 1.9; }
 .contact-details a { color: #315b43; text-decoration: underline; }
-.auth-dialog, .detail-dialog, .application-dialog { width: min(520px, calc(100% - 28px)); max-height: 90vh; overflow: auto; margin: auto; padding: 34px; border: 0; border-radius: 22px; color: #263b32; box-shadow: 0 24px 80px #14251d40; }
+.auth-dialog, .detail-dialog, .application-dialog { width: min(520px, calc(100% - 28px)); max-height: 90vh; overflow: auto; margin: auto; padding: 34px; border: 0; border-radius: 22px; background: #fff; color: #263b32; box-shadow: 0 24px 80px #14251d40; }
 .auth-dialog::backdrop, .detail-dialog::backdrop, .application-dialog::backdrop { background: #14251d99; }
 .auth-dialog h2, .application-dialog h2, .detail-dialog h2 { margin: 12px 0; font-family: 'Playfair Display', serif; }
-.auth-dialog input, .auth-dialog select { width: 100%; margin-top: 6px; padding: 12px; border: 1px solid #d9ded6; border-radius: 9px; font: inherit; }
-.auth-dialog label, .application-dialog label { margin: 12px 0; }
+.auth-intro { margin-bottom: 22px; color: #788176; }
+.auth-dialog label, .application-dialog label { display: block; margin: 12px 0; color: #536258; font-size: 13px; font-weight: 700; }
+.auth-dialog input, .auth-dialog select, .application-dialog input, .application-dialog textarea { width: 100%; margin-top: 6px; padding: 12px; border: 1px solid #d9ded6; border-radius: 9px; font: inherit; }
+.auth-dialog input:focus { outline: 2px solid #76977e; border-color: transparent; }
 .auth-submit { width: 100%; margin-top: 14px; border: 0; cursor: pointer; }
 .auth-close { position: sticky; float: right; top: 0; border: 0; background: #fff; color: #788176; font-size: 28px; cursor: pointer; }
 .auth-switch { display: block; margin: 17px auto 0; border: 0; background: none; color: #315b43; font: inherit; font-weight: 700; cursor: pointer; }
-.auth-message { min-height: 20px; color: #315b43; font-size: 13px; }
+.auth-message { min-height: 20px; margin-top: 12px; color: #315b43; font-size: 13px; line-height: 1.5; }
+.auth-message[data-error="true"] { color: #a63f35; }
 .detail-photo { width: 100%; max-height: 280px; border-radius: 14px; object-fit: cover; }
 .detail-dialog p { margin: 10px 0; line-height: 1.7; color: #68756b; }
 .detail-dialog h3 { margin-top: 20px; }
