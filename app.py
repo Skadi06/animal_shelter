@@ -12,15 +12,24 @@ ROOT = Path(__file__).resolve().parent
 DB_PATH = ROOT / "shelter.db"
 # Supabase's Vercel integration provides POSTGRES_URL; DATABASE_URL also works.
 DATABASE_URL = os.environ.get("DATABASE_URL") or os.environ.get("POSTGRES_URL")
+_db_ready = False
 ROLES = {"volunteer", "staff", "administrator"}
 ANIMAL_FIELDS = ("name", "species", "breed", "age", "gender", "size", "description", "status", "photo", "vaccinated", "spayed_neutered", "dietary_needs", "behavior", "special_care")
 
 
 @app.before_request
 def check_vercel_database():
-    # Return a useful API message instead of trying to write SQLite on Vercel.
+    global _db_ready
+    # Return useful API messages instead of crashing during a function cold start.
     if request.path.startswith("/api/") and os.environ.get("VERCEL") and not DATABASE_URL:
         return jsonify(error="Vercel is missing a PostgreSQL connection string. Add DATABASE_URL or POSTGRES_URL, then redeploy."), 503
+    if request.path.startswith("/api/") and DATABASE_URL and not _db_ready:
+        try:
+            init_db()
+            _db_ready = True
+        except Exception:
+            app.logger.exception("Database initialization failed")
+            return jsonify(error="The backend could not connect to PostgreSQL or initialize its tables. Check Vercel Function Logs."), 503
 
 
 class Database:
@@ -134,11 +143,6 @@ def init_db():
                 ("Adoption Event Support", "Welcome visitors and introduce them to animals at community events.", "Saturday events, 10 AM–2 PM"),
                 ("Foster a Friend", "Provide a temporary home for an animal while they wait for adoption.", "Flexible, coordinated with shelter staff")
             ])
-
-
-# Vercel Functions start from this module; initialize hosted tables on cold start.
-if DATABASE_URL:
-    init_db()
 
 
 def current_user():
