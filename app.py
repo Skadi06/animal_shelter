@@ -335,20 +335,30 @@ def update_profile():
 @app.get("/api/animals")
 def list_animals():
     filters = {key: request.args.get(key, "").strip() for key in ("search", "species", "breed", "age", "size", "gender", "status")}
-    query, values = "SELECT * FROM animals WHERE 1=1", []
+    conditions, values = [], []
     for key, value in filters.items():
         if value:
             if key == "search":
-                query += " AND (name LIKE ? OR breed LIKE ? OR description LIKE ?)"
+                conditions.append("(name LIKE ? OR breed LIKE ? OR description LIKE ?)")
                 values.extend([f"%{value}%"] * 3)
             elif key == "age":
-                query += " AND age LIKE ?"; values.append(f"%{value}%")
+                conditions.append("age LIKE ?")
+                values.append(f"%{value}%")
             else:
-                query += f" AND {key} LIKE ?"; values.append(f"%{value}%")
-    query += " ORDER BY id DESC"
+                conditions.append(f"{key} LIKE ?")
+                values.append(f"%{value}%")
+    where = " WHERE " + " AND ".join(conditions) if conditions else ""
+    page_size = 12
+    page = max(1, request.args.get("page", 1, type=int) or 1)
     with db() as conn:
-        animals = [dict(row) for row in conn.execute(query, values).fetchall()]
-    return jsonify(animals=animals)
+        total = conn.execute(f"SELECT COUNT(*) AS total FROM animals{where}", values).fetchone()["total"]
+        pages = max(1, (total + page_size - 1) // page_size)
+        page = min(page, pages)
+        animals = conn.execute(
+            f"SELECT * FROM animals{where} ORDER BY id DESC LIMIT ? OFFSET ?",
+            (*values, page_size, (page - 1) * page_size),
+        ).fetchall()
+    return jsonify(animals=[dict(row) for row in animals], page=page, pages=pages, total=total)
 
 
 @app.get("/api/animals/<int:animal_id>")
@@ -358,6 +368,14 @@ def animal_detail(animal_id):
     if not animal:
         return jsonify(error="Animal not found."), 404
     return jsonify(animal=dict(animal))
+
+
+@app.get("/api/animals/options")
+def animal_options():
+    """Return names for the animal selector in the contact form."""
+    with db() as conn:
+        rows = conn.execute("SELECT id, name FROM animals ORDER BY name").fetchall()
+    return jsonify(animals=[dict(row) for row in rows])
 
 
 @app.route("/api/favorites/<int:animal_id>", methods=["POST", "DELETE"])

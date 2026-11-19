@@ -3,6 +3,8 @@ const $ = (selector) => document.querySelector(selector);
 const authDialog = $("#auth-dialog");
 let user = null;
 let animals = [];
+let savedAnimalIds = new Set();
+let animalPage = 1;
 let signupMode = false;
 
 const escapeHtml = (value = "") => String(value).replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char]));
@@ -52,20 +54,30 @@ function refreshRoleControls() {
 }
 
 function animalCard(animal) {
+  const saved = savedAnimalIds.has(Number(animal.id));
   return `<article class="animal-card">
     <img src="${escapeHtml(animal.photo || "https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=800")}" alt="${escapeHtml(animal.name)}" loading="lazy">
     <div class="animal-info"><div><h3>${escapeHtml(animal.name)}</h3><p>${escapeHtml(animal.breed)} · ${escapeHtml(animal.gender)}</p></div><span class="age">${escapeHtml(animal.age)}</span></div>
     <p class="animal-summary">${escapeHtml(animal.description)}</p><span class="status-badge status-${escapeHtml(animal.status.toLowerCase())}">${escapeHtml(animal.status)}</span>
-    <div class="animal-actions"><button class="secondary-button" data-detail="${animal.id}">View profile</button><button class="secondary-button" data-favorite="${animal.id}" aria-label="Save ${escapeHtml(animal.name)}">♡ Save</button>${animal.status === "Available" ? `<button class="primary-button" data-adopt="${animal.id}">Apply to adopt</button>` : ""}</div>
+    <div class="animal-actions"><button class="secondary-button" data-detail="${animal.id}">View profile</button><button class="secondary-button favorite-button" data-favorite="${animal.id}" aria-pressed="${saved}">${saved ? "♥ Saved" : "♡ Save"}</button>${animal.status === "Available" ? `<button class="primary-button" data-adopt="${animal.id}">Apply to adopt</button>` : ""}</div>
     ${user && ["staff", "administrator"].includes(user.role) ? `<div class="admin-animal-actions"><button data-edit="${animal.id}">Edit</button><button data-delete="${animal.id}">Remove</button></div>` : ""}</article>`;
 }
 
-async function loadAnimals() {
+async function loadAnimals(page = animalPage) {
   const filters = new URLSearchParams(new FormData($("#animal-filters")));
+  filters.set("page", page);
   const data = await api(`animals?${filters.toString()}`, { method: "GET" });
   animals = data.animals;
   $("#animal-grid").innerHTML = animals.length ? animals.map(animalCard).join("") : `<p class="empty-state">No animals match those filters yet. Try changing your search.</p>`;
-  $("#contact-animal").innerHTML = `<option value="">General question</option>` + animals.map((animal) => `<option value="${animal.id}">${escapeHtml(animal.name)}</option>`).join("");
+  animalPage = data.page;
+  $("#animal-pagination").innerHTML = data.pages > 1
+    ? `<button type="button" data-page="${data.page - 1}" ${data.page === 1 ? "disabled" : ""}>← Previous</button><span>Page ${data.page} of ${data.pages} · ${data.total} animals</span><button type="button" data-page="${data.page + 1}" ${data.page === data.pages ? "disabled" : ""}>Next →</button>`
+    : `<span>${data.total} ${data.total === 1 ? "animal" : "animals"}</span>`;
+}
+
+async function loadAnimalOptions() {
+  const { animals: allAnimals } = await api("animals/options", { method: "GET" });
+  $("#contact-animal").innerHTML = `<option value="">General question</option>` + allAnimals.map((animal) => `<option value="${animal.id}">${escapeHtml(animal.name)}</option>`).join("");
 }
 
 async function loadOpportunities() {
@@ -78,6 +90,7 @@ async function loadAccount() {
   const profileForm = $("#profile-form");
   for (const key of ["name", "phone", "address", "experience", "pets"]) profileForm.elements[key].value = user[key] || "";
   const [favorites, applications] = await Promise.all([api("favorites", { method: "GET" }), api("applications", { method: "GET" })]);
+  savedAnimalIds = new Set(favorites.animals.map((animal) => Number(animal.id)));
   $("#favorite-list").innerHTML = favorites.animals.length ? favorites.animals.map((animal) => `<p><a href="#animals">${escapeHtml(animal.name)}</a> · ${escapeHtml(animal.status)} <button data-unfavorite="${animal.id}">Remove</button></p>`).join("") : `<p class="empty-state">Save an animal from the listings to see it here.</p>`;
   $("#application-list").innerHTML = applications.applications.length ? applications.applications.map((item) => `<article class="application-item"><strong>${escapeHtml(item.animal_name)}</strong><span>${escapeHtml(item.status)}</span><small>Submitted ${escapeHtml(item.created_at)}</small></article>`).join("") : `<p class="empty-state">Your adoption applications will appear here.</p>`;
 }
@@ -108,6 +121,7 @@ $("#login-button").onclick = async () => {
   if (user) {
     await api("logout", { body: {} });
     user = null;
+    savedAnimalIds.clear();
     refreshRoleControls();
     await loadAnimals();
   } else {
@@ -163,8 +177,15 @@ $("#auth-form").onsubmit = async (event) => {
 };
 
 // Search and filter animals from the shelter database.
-$("#animal-filters").onsubmit = (event) => { event.preventDefault(); loadAnimals().catch((error) => alert(error.message)); };
-$("#animal-filters").onchange = () => loadAnimals().catch((error) => alert(error.message));
+$("#animal-filters").onsubmit = (event) => {
+  event.preventDefault();
+  loadAnimals(1).catch((error) => showMessage($("#animal-feedback"), error.message, true));
+};
+$("#animal-filters").onchange = () => loadAnimals(1).catch((error) => showMessage($("#animal-feedback"), error.message, true));
+$("#animal-pagination").onclick = (event) => {
+  const pageButton = event.target.closest("[data-page]");
+  if (pageButton && !pageButton.disabled) loadAnimals(Number(pageButton.dataset.page)).catch((error) => showMessage($("#animal-feedback"), error.message, true));
+};
 
 // Animal cards open profiles, save favorites, and begin adoption applications.
 $("#animal-grid").onclick = async (event) => {
@@ -177,9 +198,20 @@ $("#animal-grid").onclick = async (event) => {
     $("#detail-dialog").showModal();
   }
   if (favoriteId) {
-    if (!user) { alert("Please log in to save favorites."); return; }
-    await api(`favorites/${favoriteId}`, { method: "POST", body: {} });
-    await loadAccount();
+    if (!user) {
+      showMessage($("#animal-feedback"), "Log in to save animals to your account.", true);
+      $("#login-button").click();
+      return;
+    }
+    try {
+      const isSaved = savedAnimalIds.has(Number(favoriteId));
+      await api(`favorites/${favoriteId}`, { method: isSaved ? "DELETE" : "POST", body: isSaved ? undefined : {} });
+      await loadAccount();
+      await loadAnimals(animalPage);
+      showMessage($("#animal-feedback"), isSaved ? "Animal removed from saved animals." : "Animal saved to your account.");
+    } catch (error) {
+      showMessage($("#animal-feedback"), error.message, true);
+    }
   }
   if (adoptId) {
     if (!user) { alert("Please log in before applying to adopt."); $("#login-button").click(); return; }
@@ -198,7 +230,11 @@ $("#detail-close").onclick = () => $("#detail-dialog").close();
 $("#application-close").onclick = () => $("#application-dialog").close();
 $("#favorite-list").onclick = async (event) => {
   const id = event.target.dataset.unfavorite;
-  if (id) { await api(`favorites/${id}`, { method: "DELETE" }); await loadAccount(); }
+  if (id) {
+    await api(`favorites/${id}`, { method: "DELETE" });
+    await loadAccount();
+    await loadAnimals(animalPage);
+  }
 };
 
 $("#application-form").onsubmit = async (event) => {
@@ -279,4 +315,4 @@ $("#admin-application-list").onchange = async (event) => {
 };
 
 // Load the public listings and restore any existing account session.
-Promise.all([loadUser(), loadOpportunities()]).catch((error) => console.error(error));
+Promise.all([loadUser(), loadOpportunities(), loadAnimalOptions()]).catch((error) => console.error(error));

@@ -563,6 +563,11 @@ a {
 .animal-filters label, .form-card label { display: block; color: #536258; font-size: 13px; font-weight: 700; }
 .animal-filters input, .animal-filters select, .form-card input, .form-card select, .form-card textarea, .application-dialog input, .application-dialog textarea { width: 100%; margin-top: 6px; padding: 11px 12px; border: 1px solid #d9ded6; border-radius: 9px; background: #fff; color: #263b32; font: inherit; }
 .animal-filters button { min-height: 44px; }
+.animal-pagination { display: flex; justify-content: center; align-items: center; gap: 18px; margin-top: 32px; color: #68756b; font-size: 14px; }
+.animal-pagination button { padding: 10px 16px; border: 1px solid #d9ded6; border-radius: 24px; background: #fff; color: #315b43; font: inherit; cursor: pointer; }
+.animal-pagination button:disabled { opacity: .45; cursor: default; }
+.animal-feedback { min-height: 22px; margin: 0 0 12px; color: #315b43; font-size: 14px; }
+.animal-feedback[data-error="true"] { color: #a63f35; }
 .animal-summary { padding: 0 8px; color: #788176; font-size: 13px; line-height: 1.6; }
 .status-badge { display: inline-block; margin: 10px 8px; padding: 6px 11px; border-radius: 20px; background: #edf0e8; color: #315b43; font-size: 12px; font-weight: 700; }
 .status-pending { background: #fff1d8; color: #8b621f; }
