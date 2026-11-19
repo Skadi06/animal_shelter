@@ -43,9 +43,19 @@ class Database:
             import psycopg
             from psycopg.rows import dict_row
             # The Supabase/Vercel integration can append a hint for Vercel's
-            # JavaScript driver; libpq/Psycopg rejects that unknown URI option.
+            # JavaScript driver; libpq/Psycopg rejects unknown URI options.
             parts = urlsplit(DATABASE_URL)
-            query = urlencode([(key, value) for key, value in parse_qsl(parts.query, keep_blank_values=True) if key != "workaround"])
+            psycopg_options = {
+                "sslmode", "sslcert", "sslkey", "sslrootcert", "connect_timeout",
+                "application_name", "channel_binding", "gssencmode", "keepalives",
+                "keepalives_idle", "keepalives_interval", "keepalives_count",
+                "target_session_attrs", "load_balance_hosts", "hostaddr",
+            }
+            query = urlencode([
+                (key, value)
+                for key, value in parse_qsl(parts.query, keep_blank_values=True)
+                if key.lower() in psycopg_options
+            ])
             postgres_url = urlunsplit((parts.scheme, parts.netloc, parts.path, query, parts.fragment))
             self.connection = psycopg.connect(
                 postgres_url,
