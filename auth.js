@@ -269,7 +269,7 @@ $("#animal-form").onsubmit = async (event) => {
     await api(id ? `admin/animals/${id}` : "admin/animals", { method: id ? "PUT" : "POST", body: data });
     form.reset();
     $("#animal-form-title").textContent = "Add an animal";
-    showMessage($("#animal-message"), "Animal profile saved.");
+    showMessage($("#animal-message"), id ? "Animal updated successfully." : "Animal added successfully.");
     await loadAnimals();
   } catch (error) { showMessage($("#animal-message"), error.message, true); }
 };
