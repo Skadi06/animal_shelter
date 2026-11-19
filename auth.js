@@ -115,6 +115,19 @@ $("#login-button").onclick = async () => {
 };
 $("#auth-close").onclick = () => authDialog.close();
 
+// Open account tools as dialogs instead of scrolling down the landing page.
+$("#account-link").onclick = (event) => {
+  event.preventDefault();
+  $("#account-panel").showModal();
+};
+$("#admin-link").onclick = (event) => {
+  event.preventDefault();
+  $("#admin-panel").showModal();
+};
+document.querySelectorAll("[data-close-dialog]").forEach((button) => {
+  button.onclick = () => $(`#${button.dataset.closeDialog}`).close();
+});
+
 $("#auth-switch").onclick = (event) => {
   signupMode = !signupMode;
   $("#auth-title").textContent = signupMode ? "Create your account" : "Welcome back";
@@ -225,7 +238,8 @@ $("#animal-grid").addEventListener("click", async (event) => {
     const form = $("#animal-form");
     for (const [key, value] of Object.entries(item)) if (form.elements[key]) form.elements[key].value = value || "";
     $("#animal-form-title").textContent = `Edit ${item.name}`;
-    $("#admin-panel").scrollIntoView({ behavior: "smooth" });
+    $("#admin-panel").showModal();
+    $("#animal-form").scrollIntoView({ behavior: "smooth", block: "start" });
   }
   if (deleteId && confirm("Remove this animal profile?")) {
     await api(`admin/animals/${deleteId}`, { method: "DELETE" });

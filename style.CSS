@@ -610,6 +610,8 @@ a {
 .admin-animal-actions { display: flex; gap: 10px; padding: 8px; }
 .admin-animal-actions button, .application-item button { color: #315b43; cursor: pointer; }
 .account-panel, .admin-panel { background: #fbf9f3; }
+.account-panel, .admin-panel { width: min(1180px, calc(100% - 32px)); max-height: 90vh; overflow: auto; margin: auto; padding: 50px 36px; border: 0; border-radius: 24px; color: #263b32; box-shadow: 0 24px 80px #14251d40; }
+.account-panel::backdrop, .admin-panel::backdrop { background: #14251d99; }
 .account-columns, .admin-columns { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 22px; margin-top: 25px; align-items: start; }
 .form-card { padding: 24px; border-radius: 18px; background: #fff; box-shadow: 0 8px 30px #263b320b; }
 .form-card h3 { margin: 0 0 18px; font-family: 'Playfair Display', serif; font-size: 22px; }
