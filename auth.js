@@ -34,6 +34,14 @@ function showMessage(element, text, error = false) {
   element.dataset.error = String(error);
 }
 
+function resetAnimalForm() {
+  const form = $("#animal-form");
+  form.reset();
+  form.elements.id.value = "";
+  $("#animal-form-title").textContent = "Add an animal";
+  showMessage($("#animal-message"), "");
+}
+
 function refreshRoleControls() {
   $("#login-button").textContent = user ? `${user.role[0].toUpperCase()}${user.role.slice(1)} · Log Out` : "Log In";
   $("#account-panel").hidden = !user;
@@ -123,8 +131,10 @@ $("#account-link").onclick = (event) => {
 };
 $("#admin-link").onclick = (event) => {
   event.preventDefault();
+  resetAnimalForm();
   $("#admin-panel").showModal();
 };
+$("#admin-panel").addEventListener("close", resetAnimalForm);
 document.querySelectorAll("[data-close-dialog]").forEach((button) => {
   button.onclick = () => $(`#${button.dataset.closeDialog}`).close();
 });
@@ -214,18 +224,20 @@ $("#profile-form").onsubmit = async (event) => {
 
 $("#volunteer-form").onsubmit = async (event) => {
   event.preventDefault();
+  const form = event.currentTarget;
   try {
-    await api("volunteers", { body: formData(event.currentTarget) });
-    event.currentTarget.reset();
+    await api("volunteers", { body: formData(form) });
+    form.reset();
     showMessage($("#volunteer-message"), "Volunteer application submitted. Thank you!");
   } catch (error) { showMessage($("#volunteer-message"), error.message, true); }
 };
 
 $("#contact-form").onsubmit = async (event) => {
   event.preventDefault();
+  const form = event.currentTarget;
   try {
-    await api("contact", { body: formData(event.currentTarget) });
-    event.currentTarget.reset();
+    await api("contact", { body: formData(form) });
+    form.reset();
     showMessage($("#contact-message"), "Your message has been sent. Thank you!");
   } catch (error) { showMessage($("#contact-message"), error.message, true); }
 };
@@ -249,12 +261,13 @@ $("#animal-grid").addEventListener("click", async (event) => {
 });
 $("#animal-form").onsubmit = async (event) => {
   event.preventDefault();
-  const data = new FormData(event.currentTarget);
+  const form = event.currentTarget;
+  const data = new FormData(form);
   const id = data.get("id");
   data.delete("id");
   try {
     await api(id ? `admin/animals/${id}` : "admin/animals", { method: id ? "PUT" : "POST", body: data });
-    event.currentTarget.reset();
+    form.reset();
     $("#animal-form-title").textContent = "Add an animal";
     showMessage($("#animal-message"), "Animal profile saved.");
     await loadAnimals();
