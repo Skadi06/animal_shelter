@@ -10,7 +10,8 @@ app = Flask(__name__)
 app.secret_key = "local-shelter-demo-key"
 ROOT = Path(__file__).resolve().parent
 DB_PATH = ROOT / "shelter.db"
-DATABASE_URL = os.environ.get("DATABASE_URL")
+# Supabase's Vercel integration provides POSTGRES_URL; DATABASE_URL also works.
+DATABASE_URL = os.environ.get("DATABASE_URL") or os.environ.get("POSTGRES_URL")
 ROLES = {"volunteer", "staff", "administrator"}
 ANIMAL_FIELDS = ("name", "species", "breed", "age", "gender", "size", "description", "status", "photo", "vaccinated", "spayed_neutered", "dietary_needs", "behavior", "special_care")
 
@@ -19,7 +20,7 @@ ANIMAL_FIELDS = ("name", "species", "breed", "age", "gender", "size", "descripti
 def check_vercel_database():
     # Return a useful API message instead of trying to write SQLite on Vercel.
     if request.path.startswith("/api/") and os.environ.get("VERCEL") and not DATABASE_URL:
-        return jsonify(error="Vercel is missing the DATABASE_URL environment variable. Add your Supabase transaction-pooler connection string, then redeploy."), 503
+        return jsonify(error="Vercel is missing a PostgreSQL connection string. Add DATABASE_URL or POSTGRES_URL, then redeploy."), 503
 
 
 class Database:
