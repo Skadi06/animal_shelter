@@ -557,8 +557,9 @@ a {
     }
 }
 
-/* Shelter portal features */
+/* Shelter portal features: filters, cards, account forms, and status messages. */
 [hidden] { display: none !important; }
+/* Search controls and paging keep large animal catalogs easy to browse. */
 .animal-filters { display: grid; grid-template-columns: repeat(4, minmax(130px, 1fr)); gap: 14px; align-items: end; margin: 0 0 35px; padding: 22px; background: #edf0e8; border-radius: 18px; }
 .animal-filters label, .form-card label { display: block; color: #536258; font-size: 13px; font-weight: 700; }
 .animal-filters input, .animal-filters select, .form-card input, .form-card select, .form-card textarea, .application-dialog input, .application-dialog textarea { width: 100%; margin-top: 6px; padding: 11px 12px; border: 1px solid #d9ded6; border-radius: 9px; background: #fff; color: #263b32; font: inherit; }
@@ -568,6 +569,7 @@ a {
 .animal-pagination button:disabled { opacity: .45; cursor: default; }
 .animal-feedback { min-height: 22px; margin: 0 0 12px; color: #315b43; font-size: 14px; }
 .animal-feedback[data-error="true"] { color: #a63f35; }
+/* Card action controls cover saving, applying, and staff-only management. */
 .animal-summary { padding: 0 8px; color: #788176; font-size: 13px; line-height: 1.6; }
 .status-badge { display: inline-block; margin: 10px 8px; padding: 6px 11px; border-radius: 20px; background: #edf0e8; color: #315b43; font-size: 12px; font-weight: 700; }
 .status-pending { background: #fff1d8; color: #8b621f; }
@@ -593,6 +595,7 @@ a {
 .application-item { display: grid; gap: 7px; padding: 13px 0; border-bottom: 1px solid #edf0e8; color: #536258; font-size: 13px; }
 .application-item small { color: #899087; }
 .empty-state { padding: 20px; color: #788176; }
+/* Contact layout and modal rules style the forms shown by the website. */
 .contact-form-section { display: grid; grid-template-columns: 1fr 1fr; gap: 20px 50px; align-items: start; }
 .contact-form-section .section-heading { grid-column: 1 / -1; }
 .contact-details { color: #68756b; line-height: 1.9; }
@@ -625,3 +628,4 @@ a {
   .animal-filters { padding: 16px; }
   .auth-dialog, .detail-dialog, .application-dialog { padding: 26px 20px; }
 }
+

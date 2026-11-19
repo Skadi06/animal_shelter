@@ -27,6 +27,12 @@ ANIMAL_FIELDS = ("name", "species", "breed", "age", "gender", "size", "descripti
 
 @app.before_request
 def check_vercel_database():
+    """Prepare the hosted database before API routes use it.
+
+    Vercel functions are short-lived, so the schema is initialized lazily on
+    the first API request in each process. If configuration or initialization
+    fails, return a readable JSON error instead of a generic HTML error page.
+    """
     global _db_ready
     # Return useful API messages instead of crashing during a function cold start.
     if request.path.startswith("/api/") and os.environ.get("VERCEL") and not DATABASE_URL:
@@ -42,12 +48,18 @@ def check_vercel_database():
 
 @app.errorhandler(413)
 def image_too_large(_error):
+    """Convert Flask's request-size error into a friendly JSON response."""
     return jsonify(error="That image is too large. Choose an image under 8 MB."), 413
 
 
 class Database:
     """Use hosted PostgreSQL on Vercel, or a local SQLite file for development."""
     def __init__(self):
+        """Open PostgreSQL when configured, otherwise open the local SQLite DB.
+
+        PostgreSQL connection options are filtered to options supported by
+        Psycopg; SQLite keeps its row and foreign-key behavior for local work.
+        """
         if DATABASE_URL:
             import psycopg
             from psycopg.rows import dict_row
@@ -79,31 +91,45 @@ class Database:
             self.postgres = False
 
     def __enter__(self):
+        """Let a Database instance be used with Python's ``with`` statement."""
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
+        """Finish the transaction and always close its underlying connection."""
         try:
             return self.connection.__exit__(exc_type, exc_value, traceback)
         finally:
             self.connection.close()
 
     def execute(self, sql, values=()):
+        """Run shared route SQL, translating placeholders for PostgreSQL."""
         if self.postgres:
+            # Existing routes use SQLite-style question marks. Convert them
+            # here so the same route code can run against PostgreSQL.
             sql = sql.replace("INSERT OR IGNORE INTO favorites", "INSERT INTO favorites")
             sql = sql.replace("VALUES(?,?)", "VALUES(%s,%s) ON CONFLICT (user_id, animal_id) DO NOTHING") if "INSERT INTO favorites" in sql else sql
             sql = sql.replace("?", "%s")
         return self.connection.execute(sql, values)
 
     def executemany(self, sql, values):
+        """Run one SQL statement for each parameter row in ``values``."""
         for row in values:
             self.execute(sql, row)
 
 
 def db():
+    """Create a database wrapper for the configured database engine."""
     return Database()
 
 
 def init_db():
+    """Create shelter tables and insert starter records when they are absent.
+
+    The operation is safe to repeat: schema uses ``IF NOT EXISTS`` and demo
+    records are added only to empty tables or when a sample dog is missing.
+    """
+    # Keep table definitions shared across local SQLite and hosted PostgreSQL;
+    # only their auto-increment and timestamp default syntax differ.
     id_type = "SERIAL" if DATABASE_URL else "INTEGER"
     time_default = "CURRENT_TIMESTAMP::text" if DATABASE_URL else "CURRENT_TIMESTAMP"
     with db() as conn:
@@ -147,6 +173,8 @@ def init_db():
                 conn.execute(statement)
         count = conn.execute("SELECT COUNT(*) AS total FROM animals").fetchone()
         if count["total"] == 0:
+            # Add demo listings only to a new database, so staff data is never
+            # overwritten when a Vercel function starts again.
             conn.executemany("""INSERT INTO animals
               (name,species,breed,age,gender,size,description,status,photo,vaccinated,spayed_neutered,dietary_needs,behavior,special_care)
               VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)""", [
@@ -175,6 +203,7 @@ def init_db():
 
 
 def current_user():
+    """Return the signed-in user's public profile, or ``None`` if logged out."""
     user_id = session.get("user_id")
     if not user_id:
         return None
@@ -184,8 +213,10 @@ def current_user():
 
 
 def login_required(fn):
+    """Reject account-only actions when the session has no logged-in user."""
     @wraps(fn)
     def wrapped(*args, **kwargs):
+        """Check for a session user before calling the protected route."""
         if not current_user():
             return jsonify(error="Please log in first."), 401
         return fn(*args, **kwargs)
@@ -193,10 +224,13 @@ def login_required(fn):
 
 
 def roles_required(*roles):
+    """Restrict management endpoints to the requested staff roles."""
     def decorate(fn):
+        """Attach the role check and login check to one route function."""
         @wraps(fn)
         @login_required
         def wrapped(*args, **kwargs):
+            """Allow the route only when the signed-in account has a role."""
             if current_user()["role"] not in roles:
                 return jsonify(error="You don't have permission to do that."), 403
             return fn(*args, **kwargs)
@@ -205,20 +239,28 @@ def roles_required(*roles):
 
 
 def json_body():
+    """Read a JSON request body, using an empty dictionary for invalid/empty JSON."""
     return request.get_json(silent=True) or {}
 
 
 def insert_id(conn, sql, values):
+    """Insert one row and return its generated ID for either database engine."""
     cursor = conn.execute(sql + (" RETURNING id" if DATABASE_URL else ""), values)
     return cursor.fetchone()["id"] if DATABASE_URL else cursor.lastrowid
 
 
 def clean_animal(data):
+    """Keep only supported animal fields from an incoming form or JSON object."""
     return {key: data.get(key, "") for key in ANIMAL_FIELDS}
 
 
 def storage_call(path, method="GET", body=None, content_type="application/json"):
-    """Call Supabase Storage using the server-side service-role key."""
+    """Send one authenticated request to the Supabase Storage REST API.
+
+    The service key stays on the backend. Dictionary payloads are encoded as
+    JSON, while byte payloads are passed through for image uploads. HTTP and
+    network errors become concise ``ValueError`` messages for the API route.
+    """
     project_url = os.environ.get("SUPABASE_URL", "").rstrip("/")
     storage_key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY") or os.environ.get("SUPABASE_SECRET_KEY")
     if not project_url or not storage_key:
@@ -246,7 +288,11 @@ def storage_call(path, method="GET", body=None, content_type="application/json")
 
 
 def upload_animal_photo(photo):
-    """Create a public animal-photo bucket if needed, then upload the image."""
+    """Validate and upload an animal image, returning its public URL.
+
+    Creates the public bucket on first use if it does not exist. A unique
+    filename prevents one uploaded image from accidentally replacing another.
+    """
     allowed_types = {"image/jpeg", "image/png", "image/webp", "image/gif"}
     content_type = photo.mimetype or mimetypes.guess_type(photo.filename or "")[0]
     if content_type not in allowed_types:
@@ -271,16 +317,19 @@ def upload_animal_photo(photo):
 
 @app.get("/")
 def home():
+    """Serve the shelter website's main HTML page."""
     return send_from_directory(ROOT, "index.html")
 
 
 @app.get("/<path:filename>")
 def website_files(filename):
+    """Serve a static website asset such as CSS or JavaScript."""
     return send_from_directory(ROOT, filename)
 
 
 @app.post("/api/register")
 def register():
+    """Create an account, start its session, and return the public user data."""
     data = json_body()
     email, password = data.get("email", "").strip().lower(), data.get("password", "")
     role = data.get("role", "volunteer")
@@ -299,6 +348,7 @@ def register():
 
 @app.post("/api/login")
 def login():
+    """Verify email and password, then store the account ID in the session."""
     data = json_body()
     with db() as conn:
         user = conn.execute("SELECT * FROM users WHERE email=?", (data.get("email", "").strip().lower(),)).fetchone()
@@ -310,18 +360,21 @@ def login():
 
 @app.post("/api/logout")
 def logout():
+    """Clear the current browser session and report success."""
     session.clear()
     return jsonify(ok=True)
 
 
 @app.get("/api/me")
 def me():
+    """Return the current account profile, or JSON null when logged out."""
     return jsonify(user=current_user())
 
 
 @app.patch("/api/profile")
 @login_required
 def update_profile():
+    """Update only the signed-in user's editable profile fields."""
     data = json_body()
     allowed = ("name", "phone", "address", "experience", "pets")
     fields = {key: data[key] for key in allowed if key in data}
@@ -334,25 +387,36 @@ def update_profile():
 
 @app.get("/api/animals")
 def list_animals():
+    """Return one page of animals matching optional case-insensitive filters.
+
+    The response includes the current page, total page count, and total match
+    count so the frontend can display short lists with previous/next controls.
+    """
+    # Read every filter the visitor entered; empty values are ignored below.
     filters = {key: request.args.get(key, "").strip() for key in ("search", "species", "breed", "age", "size", "gender", "status")}
     conditions, values = [], []
     for key, value in filters.items():
         if value:
             if key == "search":
-                conditions.append("(name LIKE ? OR breed LIKE ? OR description LIKE ?)")
+                # Lowercase both sides so searches match regardless of capitalization
+                # in SQLite locally or PostgreSQL on Vercel.
+                conditions.append("(LOWER(name) LIKE LOWER(?) OR LOWER(breed) LIKE LOWER(?) OR LOWER(description) LIKE LOWER(?))")
                 values.extend([f"%{value}%"] * 3)
             elif key == "age":
-                conditions.append("age LIKE ?")
+                conditions.append("LOWER(age) LIKE LOWER(?)")
                 values.append(f"%{value}%")
             else:
-                conditions.append(f"{key} LIKE ?")
+                conditions.append(f"LOWER({key}) LIKE LOWER(?)")
                 values.append(f"%{value}%")
+    # Apply all chosen filters together, then count the full matching result set
+    # before loading only the requested page of animals.
     where = " WHERE " + " AND ".join(conditions) if conditions else ""
     page_size = 12
     page = max(1, request.args.get("page", 1, type=int) or 1)
     with db() as conn:
         total = conn.execute(f"SELECT COUNT(*) AS total FROM animals{where}", values).fetchone()["total"]
         pages = max(1, (total + page_size - 1) // page_size)
+        # Clamp stale page numbers after filtering or removing the last animal on a page.
         page = min(page, pages)
         animals = conn.execute(
             f"SELECT * FROM animals{where} ORDER BY id DESC LIMIT ? OFFSET ?",
@@ -363,6 +427,7 @@ def list_animals():
 
 @app.get("/api/animals/<int:animal_id>")
 def animal_detail(animal_id):
+    """Return one animal profile, or a 404 JSON response if it is missing."""
     with db() as conn:
         animal = conn.execute("SELECT * FROM animals WHERE id=?", (animal_id,)).fetchone()
     if not animal:
@@ -372,7 +437,7 @@ def animal_detail(animal_id):
 
 @app.get("/api/animals/options")
 def animal_options():
-    """Return names for the animal selector in the contact form."""
+    """Return animal IDs and names for the contact form's animal selector."""
     with db() as conn:
         rows = conn.execute("SELECT id, name FROM animals ORDER BY name").fetchall()
     return jsonify(animals=[dict(row) for row in rows])
@@ -381,6 +446,7 @@ def animal_options():
 @app.route("/api/favorites/<int:animal_id>", methods=["POST", "DELETE"])
 @login_required
 def favorite(animal_id):
+    """Add or remove the signed-in user's saved-animal relationship."""
     with db() as conn:
         if request.method == "POST":
             conn.execute("INSERT OR IGNORE INTO favorites(user_id,animal_id) VALUES(?,?)", (session["user_id"], animal_id))
@@ -392,6 +458,7 @@ def favorite(animal_id):
 @app.get("/api/favorites")
 @login_required
 def list_favorites():
+    """Return complete animal profiles saved by the signed-in user."""
     with db() as conn:
         rows = conn.execute("SELECT a.* FROM animals a JOIN favorites f ON a.id=f.animal_id WHERE f.user_id=?", (session["user_id"],)).fetchall()
     return jsonify(animals=[dict(row) for row in rows])
@@ -400,6 +467,7 @@ def list_favorites():
 @app.route("/api/applications", methods=["GET", "POST"])
 @login_required
 def applications():
+    """List the user's adoption applications or create a new application."""
     if request.method == "GET":
         with db() as conn:
             rows = conn.execute("SELECT a.*,animal.name AS animal_name FROM adoptions a JOIN animals animal ON animal.id=a.animal_id WHERE a.user_id=? ORDER BY a.created_at DESC", (session["user_id"],)).fetchall()
@@ -415,6 +483,7 @@ def applications():
 
 @app.get("/api/opportunities")
 def opportunities():
+    """Return the volunteer opportunities shown on the public website."""
     with db() as conn:
         rows = conn.execute("SELECT * FROM opportunities ORDER BY id").fetchall()
     return jsonify(opportunities=[dict(row) for row in rows])
@@ -422,6 +491,7 @@ def opportunities():
 
 @app.post("/api/volunteers")
 def volunteer_apply():
+    """Save a volunteer application and associate it with a user if logged in."""
     data, user = json_body(), current_user()
     if not data.get("name") or not data.get("email") or not data.get("availability"):
         return jsonify(error="Name, email, and availability are required."), 400
@@ -432,6 +502,7 @@ def volunteer_apply():
 
 @app.post("/api/contact")
 def contact():
+    """Save a visitor message, optionally associating it with an animal."""
     data = json_body()
     if not data.get("name") or not data.get("email") or not data.get("message"):
         return jsonify(error="Please enter your name, email, and message."), 400
@@ -443,6 +514,7 @@ def contact():
 @app.get("/api/admin/applications")
 @roles_required("staff", "administrator")
 def admin_applications():
+    """Return adoption and volunteer applications for authorized staff."""
     with db() as conn:
         adoptions = conn.execute("SELECT a.*,u.email AS account_email,an.name AS animal_name FROM adoptions a JOIN users u ON u.id=a.user_id JOIN animals an ON an.id=a.animal_id ORDER BY a.created_at DESC").fetchall()
         volunteers = conn.execute("SELECT * FROM volunteer_applications ORDER BY created_at DESC").fetchall()
@@ -452,6 +524,7 @@ def admin_applications():
 @app.patch("/api/admin/applications/<kind>/<int:item_id>")
 @roles_required("staff", "administrator")
 def update_application(kind, item_id):
+    """Change an adoption or volunteer application's review status."""
     table = {"adoption": "adoptions", "volunteer": "volunteer_applications"}.get(kind)
     status = json_body().get("status")
     if not table or status not in {"Submitted", "In Review", "Approved", "Declined"}:
@@ -465,6 +538,14 @@ def update_application(kind, item_id):
 @app.route("/api/admin/animals/<int:animal_id>", methods=["PUT", "DELETE"])
 @roles_required("staff", "administrator")
 def manage_animal(animal_id):
+    """Create, edit, or remove an animal profile for staff and administrators.
+
+    Create/edit requests accept multipart form data for optional image upload;
+    when an edit has no new image, the animal's existing photo is preserved.
+    """
+    # Admin form submissions are multipart so they can contain both regular
+    # animal fields and an optional image file. A photo-less edit keeps the
+    # animal's existing image URL.
     with db() as conn:
         if request.method == "DELETE":
             conn.execute("DELETE FROM animals WHERE id=?", (animal_id,))
