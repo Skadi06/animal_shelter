@@ -1,347 +1,43 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Happy Tails | Animal Shelter</title>
-    <link rel="stylesheet" href="style.CSS">
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Meet adoptable animals, apply to adopt or volunteer, and learn about Happy Tails Animal Shelter.">
+  <title>Happy Tails | Animal Shelter</title><link rel="stylesheet" href="style.CSS">
 </head>
-
 <body>
+  <header class="navbar">
+    <a href="#home" class="logo">🐾 Happy Tails</a>
+    <nav aria-label="Main navigation"><a href="#home">Home</a><a href="#animals">Animals</a><a href="#help">Volunteer</a><a href="#contact-form">Contact</a><a href="#account-panel" id="account-link" hidden>My Account</a><a href="#admin-panel" id="admin-link" hidden>Admin</a></nav>
+    <div class="nav-actions"><button type="button" class="login-button" id="login-button">Log In</button><a href="#animals" class="nav-button">Find a Friend</a></div>
+  </header>
 
-    <!-- Navigation -->
-    <header class="navbar">
-        <a href="#" class="logo">🐾 Happy Tails</a>
+  <main>
+    <section class="hero" id="home"><div class="hero-content"><span class="eyebrow">WELCOME TO HAPPY TAILS</span><h1>Every animal deserves a <span>loving home.</span></h1><p>We rescue, protect, and care for animals in need. Find your new best friend or lend a helping hand.</p><div class="hero-buttons"><a href="#animals" class="primary-button">Meet Our Animals →</a><a href="#help" class="secondary-button">Volunteer with us</a></div><div class="hero-note">❤️ Every adoption makes a difference.</div></div><div class="hero-image"><img src="https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=1200" alt="Two happy dogs"><div class="image-label"><span>🐶</span><div><strong>Find your best friend</strong><small>They are waiting for you</small></div></div></div></section>
 
-        <nav>
-            <a href="#home">Home</a>
-            <a href="#animals">Our Animals</a>
-            <a href="#about">About Us</a>
-            <a href="#help">Get Involved</a>
-            <a href="#contact">Contact</a>
-        </nav>
+    <section class="stats"><div><h2>120+</h2><p>Animals Rescued</p></div><div><h2>85+</h2><p>Happy Adoptions</p></div><div><h2>30+</h2><p>Volunteers</p></div><div><h2>100%</h2><p>Made with Love</p></div></section>
 
-        <div class="nav-actions">
-            <button type="button" class="login-button" id="login-button">Log In</button>
-            <a href="#animals" class="nav-button">Find a Friend</a>
-        </div>
-    </header>
-
-
-    <!-- Hero Section -->
-    <section class="hero" id="home">
-
-        <div class="hero-content">
-            <span class="eyebrow">WELCOME TO HAPPY TAILS</span>
-
-            <h1>
-                Every animal deserves a
-                <span>loving home.</span>
-            </h1>
-
-            <p>
-                We rescue, protect, and care for animals in need.
-                Help us give every furry friend a second chance
-                at a happy life.
-            </p>
-
-            <div class="hero-buttons">
-                <a href="#animals" class="primary-button">
-                    Meet Our Animals →
-                </a>
-
-                <a href="#about" class="secondary-button">
-                    Learn More
-                </a>
-            </div>
-
-            <div class="hero-note">
-                ❤️ Every adoption makes a difference.
-            </div>
-        </div>
-
-        <div class="hero-image">
-            <img
-                src="https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=1200"
-                alt="Two happy dogs"
-            >
-
-            <div class="image-label">
-                <span>🐶</span>
-                <div>
-                    <strong>Find your best friend</strong>
-                    <small>They are waiting for you</small>
-                </div>
-            </div>
-        </div>
-
+    <section class="section" id="animals"><div class="section-heading"><span class="eyebrow">MEET YOUR NEW FRIEND</span><h2>Waiting for a <span>forever home.</span></h2><p>Search available animals, learn about their care, and submit an adoption application.</p></div>
+      <form class="animal-filters" id="animal-filters" aria-label="Search and filter animals"><label>Search<input name="search" placeholder="Name, breed, or keyword"></label><label>Type<select name="species"><option value="">All animals</option><option>Dog</option><option>Cat</option><option>Other</option></select></label><label>Breed<input name="breed" placeholder="Any breed"></label><label>Age<input name="age" placeholder="Any age"></label><label>Size<select name="size"><option value="">Any size</option><option>Small</option><option>Medium</option><option>Large</option></select></label><label>Gender<select name="gender"><option value="">Any</option><option>Female</option><option>Male</option></select></label><button class="primary-button" type="submit">Search</button></form>
+      <div class="animal-grid" id="animal-grid" aria-live="polite"></div>
     </section>
 
+    <section class="account-panel section" id="account-panel" hidden><span class="eyebrow">YOUR ACCOUNT</span><h2>Profile and activity</h2><div class="account-columns"><form id="profile-form" class="form-card"><h3>My profile</h3><label>Full name<input name="name" required></label><label>Phone<input name="phone" type="tel"></label><label>Address<input name="address"></label><label>Pet ownership experience<textarea name="experience" rows="3"></textarea></label><label>Current pets<textarea name="pets" rows="2"></textarea></label><button class="primary-button">Save Profile</button><p class="form-message" id="profile-message" role="status"></p></form><div class="form-card"><h3>Saved animals</h3><div id="favorite-list"></div></div><div class="form-card"><h3>Adoption applications</h3><div id="application-list"></div></div></div></section>
 
-    <!-- Statistics -->
-    <section class="stats">
-        <div>
-            <h2>120+</h2>
-            <p>Animals Rescued</p>
-        </div>
+    <section class="about section" id="about"><div class="about-image"><img src="https://images.unsplash.com/photo-1450778869180-41d0601e046e?w=1000" alt="Dog receiving care"></div><div class="about-content"><span class="eyebrow">WHO WE ARE</span><h2>A little kindness can change a <span>life.</span></h2><p>Happy Tails is an animal shelter dedicated to rescuing abandoned animals and helping them find safe, caring, and loving families.</p><div class="about-feature"><span>🐾</span><div><h3>Rescue & Protect</h3><p>A safe place for animals in need.</p></div></div><div class="about-feature"><span>❤️</span><div><h3>Medical Care</h3><p>Proper care and support for every animal.</p></div></div><div class="about-feature"><span>🏡</span><div><h3>Find Loving Homes</h3><p>Connecting animals with forever families.</p></div></div></div></section>
 
-        <div>
-            <h2>85+</h2>
-            <p>Happy Adoptions</p>
-        </div>
+    <section class="help section" id="help"><span class="eyebrow">MAKE A DIFFERENCE</span><h2>Volunteer and <span>help.</span></h2><p>Explore current opportunities and submit a volunteer application.</p><div class="help-grid" id="opportunity-grid"></div><form id="volunteer-form" class="form-card volunteer-form"><h3>Volunteer application</h3><div class="form-row"><label>Name<input name="name" required></label><label>Email<input name="email" type="email" required></label><label>Phone<input name="phone" type="tel"></label></div><label>I'm interested in<textarea name="interests" rows="2" placeholder="Animal care, events, fostering…"></textarea></label><label>Availability<input name="availability" required placeholder="Days and times that work for you"></label><label>Relevant experience<textarea name="experience" rows="2"></textarea></label><button class="primary-button">Apply to Volunteer</button><p class="form-message" id="volunteer-message" role="status"></p></form></section>
 
-        <div>
-            <h2>30+</h2>
-            <p>Volunteers</p>
-        </div>
+    <section class="admin-panel section" id="admin-panel" hidden><span class="eyebrow">SHELTER STAFF</span><h2>Management dashboard</h2><div class="admin-columns"><form id="animal-form" class="form-card"><h3 id="animal-form-title">Add an animal</h3><input type="hidden" name="id"><div class="form-row"><label>Name<input name="name" required></label><label>Type<input name="species" value="Dog"></label><label>Breed<input name="breed"></label></div><div class="form-row"><label>Age<input name="age"></label><label>Gender<select name="gender"><option>Female</option><option>Male</option></select></label><label>Size<select name="size"><option>Small</option><option>Medium</option><option>Large</option></select></label></div><label>Photo URL<input name="photo" type="url"></label><label>Description<textarea name="description" rows="3"></textarea></label><div class="form-row"><label>Vaccinations<input name="vaccinated"></label><label>Spay/neuter<input name="spayed_neutered"></label><label>Status<select name="status"><option>Available</option><option>Pending</option><option>Adopted</option></select></label></div><label>Dietary needs<input name="dietary_needs"></label><label>Behavior<input name="behavior"></label><label>Special care<textarea name="special_care" rows="2"></textarea></label><button class="primary-button">Save Animal</button> <button type="button" class="secondary-button" id="animal-cancel">Clear</button><p class="form-message" id="animal-message" role="status"></p></form><div class="form-card"><h3>Adoption and volunteer applications</h3><div id="admin-application-list"></div></div></div></section>
 
-        <div>
-            <h2>100%</h2>
-            <p>Made with Love</p>
-        </div>
-    </section>
+    <section class="contact" id="contact"><div><span class="eyebrow">YOUR NEW FRIEND IS WAITING</span><h2>Be the reason someone gets a second chance.</h2><p>Start your adoption journey with us today.</p><a href="#contact-form" class="light-button">Contact Us →</a></div><div class="contact-paw">🐾</div></section>
+    <section class="contact-form-section section" id="contact-form"><div class="section-heading"><span class="eyebrow">GET IN TOUCH</span><h2>We'd love to hear from you.</h2><p>Ask us about an animal or send the shelter team a message.</p></div><div class="contact-details"><p><strong>Email:</strong> hello@happytails.com</p><p><strong>Phone:</strong> (555) 010-2026</p><p><strong>Location:</strong> 125 Meadow Lane, Springfield</p><p><strong>Hours:</strong> Mon–Fri 9 AM–6 PM · Sat–Sun 10 AM–4 PM</p><p>Follow us on <a href="https://instagram.com" target="_blank" rel="noreferrer">Instagram</a> and <a href="https://facebook.com" target="_blank" rel="noreferrer">Facebook</a>.</p></div><form id="contact-form" class="form-card"><div class="form-row"><label>Name<input name="name" required></label><label>Email<input name="email" type="email" required></label></div><label>Animal (optional)<select name="animal_id" id="contact-animal"><option value="">General question</option></select></label><label>Message<textarea name="message" rows="4" required></textarea></label><button class="primary-button">Send Message</button><p class="form-message" id="contact-message" role="status"></p></form></section>
+  </main>
 
+  <footer class="footer"><a href="#home" class="logo">🐾 Happy Tails</a><p>Giving every animal a chance to be loved.</p><span>© 2026 Happy Tails Animal Shelter.</span></footer>
 
-    <!-- Animals Section -->
-    <section class="section" id="animals">
-
-        <div class="section-heading">
-            <span class="eyebrow">MEET YOUR NEW FRIEND</span>
-
-            <h2>
-                Waiting for a
-                <span>forever home.</span>
-            </h2>
-
-            <p>
-                These lovely animals are looking for someone
-                to give them love, care, and a place to call home.
-            </p>
-        </div>
-
-
-        <div class="animal-grid">
-
-            <div class="animal-card">
-                <img
-                    src="https://images.unsplash.com/photo-1552053831-71594a27632d?w=800"
-                    alt="Charlie the Golden Retriever"
-                >
-
-                <div class="animal-info">
-                    <div>
-                        <h3>Charlie</h3>
-                        <p>Golden Retriever</p>
-                    </div>
-
-                    <span class="age">2 years old</span>
-                </div>
-
-                <a href="#contact" class="adopt-link">
-                    Meet Charlie →
-                </a>
-            </div>
-
-
-            <div class="animal-card">
-                <img
-                    src="https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=800"
-                    alt="Bella the puppy"
-                >
-
-                <div class="animal-info">
-                    <div>
-                        <h3>Bella</h3>
-                        <p>Mixed Breed</p>
-                    </div>
-
-                    <span class="age">8 months old</span>
-                </div>
-
-                <a href="#contact" class="adopt-link">
-                    Meet Bella →
-                </a>
-            </div>
-
-
-            <div class="animal-card">
-                <img
-                    src="https://images.unsplash.com/photo-1517849845537-4d257902454a?w=800"
-                    alt="Max the rescue dog"
-                >
-
-                <div class="animal-info">
-                    <div>
-                        <h3>Max</h3>
-                        <p>Rescue Dog</p>
-                    </div>
-
-                    <span class="age">3 years old</span>
-                </div>
-
-                <a href="#contact" class="adopt-link">
-                    Meet Max →
-                </a>
-            </div>
-
-        </div>
-
-        <div class="center-button">
-            <a href="#contact" class="primary-button">
-                View All Animals →
-            </a>
-        </div>
-
-    </section>
-
-
-    <!-- About Section -->
-    <section class="about section" id="about">
-
-        <div class="about-image">
-            <img
-                src="https://images.unsplash.com/photo-1450778869180-41d0601e046e?w=1000"
-                alt="Dog receiving care"
-            >
-        </div>
-
-        <div class="about-content">
-            <span class="eyebrow">WHO WE ARE</span>
-
-            <h2>
-                A little kindness can change a
-                <span>life.</span>
-            </h2>
-
-            <p>
-                Happy Tails is an animal shelter dedicated to
-                rescuing abandoned animals and helping them find
-                safe, caring, and loving families.
-            </p>
-
-            <div class="about-feature">
-                <span>🐾</span>
-                <div>
-                    <h3>Rescue & Protect</h3>
-                    <p>Providing a safe place for animals in need.</p>
-                </div>
-            </div>
-
-            <div class="about-feature">
-                <span>❤️</span>
-                <div>
-                    <h3>Medical Care</h3>
-                    <p>Making sure every animal receives proper care.</p>
-                </div>
-            </div>
-
-            <div class="about-feature">
-                <span>🏡</span>
-                <div>
-                    <h3>Find Loving Homes</h3>
-                    <p>Connecting animals with their forever families.</p>
-                </div>
-            </div>
-        </div>
-
-    </section>
-
-
-    <!-- Get Involved -->
-    <section class="help section" id="help">
-
-        <span class="eyebrow">MAKE A DIFFERENCE</span>
-
-        <h2>
-            There are many ways to
-            <span>help.</span>
-        </h2>
-
-        <p>
-            You don't have to adopt an animal to change its life.
-            Every helping hand matters.
-        </p>
-
-        <div class="help-grid">
-
-            <div class="help-card">
-                <div>🏡</div>
-                <h3>Adopt</h3>
-                <p>Give an animal a loving forever home.</p>
-            </div>
-
-            <div class="help-card">
-                <div>🤝</div>
-                <h3>Volunteer</h3>
-                <p>Spend your time helping animals in need.</p>
-            </div>
-
-            <div class="help-card">
-                <div>🐕</div>
-                <h3>Foster</h3>
-                <p>Provide temporary care and a safe home.</p>
-            </div>
-
-        </div>
-
-    </section>
-
-
-    <!-- Contact -->
-    <section class="contact" id="contact">
-
-        <div>
-            <span class="eyebrow">YOUR NEW FRIEND IS WAITING</span>
-
-            <h2>
-                Be the reason someone gets a second chance.
-            </h2>
-
-            <p>Start your adoption journey with us today.</p>
-
-            <a href="mailto:hello@happytails.com" class="light-button">
-                Contact Us →
-            </a>
-        </div>
-
-        <div class="contact-paw">🐾</div>
-
-    </section>
-
-
-    <!-- Footer -->
-    <footer class="footer">
-
-        <a href="#" class="logo">🐾 Happy Tails</a>
-
-        <p>Giving every animal a chance to be loved.</p>
-
-        <span>
-            © 2026 Happy Tails Animal Shelter.
-            All rights reserved.
-        </span>
-
-    </footer>
-
-    <dialog class="auth-dialog" id="auth-dialog" aria-labelledby="auth-title">
-        <button type="button" class="auth-close" id="auth-close" aria-label="Close login">&times;</button>
-        <span class="eyebrow">HAPPY TAILS ACCOUNT</span>
-        <h2 id="auth-title">Welcome back</h2>
-        <p class="auth-intro" id="auth-intro">Log in to continue.</p>
-        <form id="auth-form">
-            <label for="auth-email">Email</label>
-            <input id="auth-email" name="email" type="email" autocomplete="email" required>
-            <label for="auth-password">Password</label>
-            <input id="auth-password" name="password" type="password" autocomplete="current-password" minlength="8" required>
-            <button class="primary-button auth-submit" id="auth-submit" type="submit">Log In</button>
-        </form>
-        <p class="auth-message" id="auth-message" role="status" aria-live="polite"></p>
-        <button type="button" class="auth-switch" id="auth-switch">Create an account</button>
-    </dialog>
-
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="auth.js"></script>
-
-</body>
-</html>
+  <dialog class="auth-dialog" id="auth-dialog" aria-labelledby="auth-title"><button type="button" class="auth-close" id="auth-close" aria-label="Close">&times;</button><span class="eyebrow">HAPPY TAILS ACCOUNT</span><h2 id="auth-title">Welcome back</h2><p class="auth-intro" id="auth-intro">Log in to continue.</p><form id="auth-form"><div id="register-name" hidden><label>Full name<input name="name" autocomplete="name"></label></div><label>Email<input name="email" type="email" autocomplete="email" required></label><label>Password<input name="password" type="password" autocomplete="current-password" minlength="8" required></label><div id="role-field" hidden><label>Account type<select name="role"><option value="volunteer">Volunteer</option><option value="staff">Staff</option><option value="administrator">Administrator</option></select></label></div><button class="primary-button auth-submit" id="auth-submit">Log In</button></form><p class="auth-message" id="auth-message" role="status" aria-live="polite"></p><button type="button" class="auth-switch" id="auth-switch">Create an account</button></dialog>
+  <dialog class="detail-dialog" id="detail-dialog"><button type="button" class="auth-close" id="detail-close" aria-label="Close">&times;</button><div id="animal-detail"></div></dialog>
+  <dialog class="application-dialog" id="application-dialog"><button type="button" class="auth-close" id="application-close" aria-label="Close">&times;</button><h2>Adoption application</h2><p id="application-animal"></p><form id="application-form"><input type="hidden" name="animal_id"><label>Applicant name<input name="name" required></label><label>Email<input name="email" type="email" required></label><label>Phone<input name="phone" type="tel" required></label><label>Living situation<textarea name="housing" rows="3" required placeholder="Home type, landlord approval, household members"></textarea></label><label>Other pets<textarea name="other_pets" rows="2"></textarea></label><label>Pet ownership experience<textarea name="experience" rows="3" required></textarea></label><button class="primary-button">Submit application</button><p class="form-message" id="application-message" role="status"></p></form></dialog>
+  <script src="auth.js"></script>
+</body></html>
