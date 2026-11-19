@@ -77,6 +77,7 @@ def db():
 
 def init_db():
     id_type = "SERIAL" if DATABASE_URL else "INTEGER"
+    time_default = "CURRENT_TIMESTAMP::text" if DATABASE_URL else "CURRENT_TIMESTAMP"
     with db() as conn:
         schema = f"""
         CREATE TABLE IF NOT EXISTS users (
@@ -98,19 +99,19 @@ def init_db():
         CREATE TABLE IF NOT EXISTS adoptions (
             id {id_type} PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id), animal_id INTEGER NOT NULL REFERENCES animals(id),
             name TEXT NOT NULL, email TEXT NOT NULL, phone TEXT DEFAULT '', housing TEXT DEFAULT '',
-            other_pets TEXT DEFAULT '', experience TEXT DEFAULT '', status TEXT DEFAULT 'Submitted', created_at TEXT DEFAULT CURRENT_TIMESTAMP
+            other_pets TEXT DEFAULT '', experience TEXT DEFAULT '', status TEXT DEFAULT 'Submitted', created_at TEXT DEFAULT {time_default}
         );
         CREATE TABLE IF NOT EXISTS volunteer_applications (
             id {id_type} PRIMARY KEY, user_id INTEGER REFERENCES users(id), name TEXT NOT NULL, email TEXT NOT NULL,
             phone TEXT DEFAULT '', interests TEXT DEFAULT '', availability TEXT DEFAULT '', experience TEXT DEFAULT '',
-            status TEXT DEFAULT 'Submitted', created_at TEXT DEFAULT CURRENT_TIMESTAMP
+            status TEXT DEFAULT 'Submitted', created_at TEXT DEFAULT {time_default}
         );
         CREATE TABLE IF NOT EXISTS opportunities (
             id {id_type} PRIMARY KEY, title TEXT NOT NULL, description TEXT DEFAULT '', schedule TEXT DEFAULT ''
         );
         CREATE TABLE IF NOT EXISTS messages (
             id {id_type} PRIMARY KEY, name TEXT NOT NULL, email TEXT NOT NULL, animal_id INTEGER,
-            message TEXT NOT NULL, created_at TEXT DEFAULT CURRENT_TIMESTAMP
+            message TEXT NOT NULL, created_at TEXT DEFAULT {time_default}
         );
         """
         for statement in schema.split(";"):
