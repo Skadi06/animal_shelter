@@ -15,7 +15,13 @@ async function api(path, options = {}) {
     headers: { "Content-Type": "application/json", ...(options.headers || {}) },
     body: options.body ? JSON.stringify(options.body) : undefined
   });
-  const data = await response.json();
+  const responseText = await response.text();
+  let data;
+  try {
+    data = JSON.parse(responseText);
+  } catch {
+    throw new Error(`Server returned HTTP ${response.status} instead of JSON. Check that Vercel deployed app.py and requirements.txt. ${responseText.slice(0, 160)}`);
+  }
   if (!response.ok) throw new Error(data.error || "The request could not be completed.");
   return data;
 }

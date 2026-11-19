@@ -15,6 +15,13 @@ ROLES = {"volunteer", "staff", "administrator"}
 ANIMAL_FIELDS = ("name", "species", "breed", "age", "gender", "size", "description", "status", "photo", "vaccinated", "spayed_neutered", "dietary_needs", "behavior", "special_care")
 
 
+@app.before_request
+def check_vercel_database():
+    # Return a useful API message instead of trying to write SQLite on Vercel.
+    if request.path.startswith("/api/") and os.environ.get("VERCEL") and not DATABASE_URL:
+        return jsonify(error="Vercel is missing the DATABASE_URL environment variable. Add your Supabase transaction-pooler connection string, then redeploy."), 503
+
+
 class Database:
     """Use hosted PostgreSQL on Vercel, or a local SQLite file for development."""
     def __init__(self):
@@ -109,6 +116,17 @@ def init_db():
                 ("Max", "Dog", "Rescue Dog", "3 years", "Male", "Medium", "A calm, affectionate dog ready for a patient forever family.", "Pending", "https://images.unsplash.com/photo-1517849845537-4d257902454a?w=800", "Up to date", "Yes", "Sensitive stomach; vet-approved food", "Gentle and relaxed", "Slow introductions to new dogs"),
                 ("Mittens", "Cat", "Domestic Shorthair", "1 year", "Female", "Small", "A sweet indoor cat who likes sunny windows and quiet company.", "Available", "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=800", "Up to date", "Yes", "Standard cat diet", "Litter trained", "Indoor home preferred")
             ])
+        # Add sample dogs by name so existing databases receive these once too.
+        sample_dogs = [
+            ("Daisy", "Dog", "Beagle Mix", "4 years", "Female", "Small", "Daisy is a cheerful trail buddy who loves sniffing around the yard and curling up after a walk.", "Available", "https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=800", "Up to date", "Yes", "Standard adult diet", "Social and curious", "Daily walks and a secure yard"),
+            ("Cooper", "Dog", "Labrador Retriever Mix", "1 year", "Male", "Large", "Cooper is an affectionate young dog who enjoys fetch, learning tricks, and spending time with people.", "Available", "https://images.unsplash.com/photo-1518717758536-85ae29035b6d?w=800", "Up to date", "Yes", "Standard adult diet", "Playful and eager to learn", "Needs regular exercise and training"),
+            ("Luna", "Dog", "Terrier Mix", "6 months", "Female", "Small", "Luna is a gentle puppy who is building confidence and would enjoy a patient home with time for training.", "Available", "https://images.unsplash.com/photo-1552053831-71594a27632d?w=800", "In progress", "Scheduled", "Puppy food", "Shy at first, warms up with treats", "Puppy socialization and basic training"),
+        ]
+        for dog in sample_dogs:
+            if not conn.execute("SELECT id FROM animals WHERE name=?", (dog[0],)).fetchone():
+                conn.execute("""INSERT INTO animals
+                  (name,species,breed,age,gender,size,description,status,photo,vaccinated,spayed_neutered,dietary_needs,behavior,special_care)
+                  VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)""", dog)
         if conn.execute("SELECT COUNT(*) AS total FROM opportunities").fetchone()["total"] == 0:
             conn.executemany("INSERT INTO opportunities (title,description,schedule) VALUES (?,?,?)", [
                 ("Animal Care Helper", "Help with feeding, enrichment, and keeping animal spaces tidy.", "Weekdays, 8–11 AM or 3–6 PM"),
