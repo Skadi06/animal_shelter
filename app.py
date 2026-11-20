@@ -405,6 +405,11 @@ def list_animals():
             elif key == "age":
                 conditions.append("LOWER(age) LIKE LOWER(?)")
                 values.append(f"%{value}%")
+            elif key == "gender":
+                # Match a selected gender exactly: a partial search for "Male"
+                # would otherwise also match "Female" because it contains it.
+                conditions.append("LOWER(gender) = LOWER(?)")
+                values.append(value)
             else:
                 conditions.append(f"LOWER({key}) LIKE LOWER(?)")
                 values.append(f"%{value}%")
