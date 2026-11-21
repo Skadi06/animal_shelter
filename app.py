@@ -8,10 +8,10 @@ from flask import Flask, jsonify, request, send_from_directory
 # Each blueprint groups related web addresses and the Python functions that
 # answer them. Keeping these imports separate makes the app easier to navigate.
 from database import DATABASE_URL, init_db
-from auth_routes import bp as auth_blueprint
-from animal_routes import bp as animal_blueprint
-from application_routes import bp as application_blueprint
-from admin_routes import bp as admin_blueprint
+from routes.auth_routes import bp as auth_blueprint
+from routes.animal_routes import bp as animal_blueprint
+from routes.application_routes import bp as application_blueprint
+from routes.admin_routes import bp as admin_blueprint
 
 # Create the Flask application object. Other files add their routes to this app.
 app = Flask(__name__)

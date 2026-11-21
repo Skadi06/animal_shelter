@@ -19,7 +19,15 @@ def admin_applications():
     volunteer rows already contain the contact details staff need.
     """
     with db() as conn:
-        adoptions = conn.execute("SELECT a.*,u.email AS account_email,an.name AS animal_name FROM adoptions a JOIN users u ON u.id=a.user_id JOIN animals an ON an.id=a.animal_id ORDER BY a.created_at DESC").fetchall()
+        adoptions = conn.execute(
+            """
+            SELECT a.*, u.email AS account_email, an.name AS animal_name
+            FROM adoptions a
+            JOIN users u ON u.id = a.user_id
+            JOIN animals an ON an.id = a.animal_id
+            ORDER BY a.created_at DESC
+            """
+        ).fetchall()
         volunteers = conn.execute("SELECT * FROM volunteer_applications ORDER BY created_at DESC").fetchall()
     return jsonify(adoptions=[dict(r) for r in adoptions], volunteers=[dict(r) for r in volunteers])
 

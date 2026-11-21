@@ -20,7 +20,11 @@ from database import DATABASE_URL, db
 ROLES = {"volunteer", "staff", "administrator"}
 # Only these animal fields are accepted from the staff edit form. Keeping this
 # list here prevents an incoming form from changing unrelated database columns.
-ANIMAL_FIELDS = ("name", "species", "breed", "age", "gender", "size", "description", "status", "photo", "vaccinated", "spayed_neutered", "dietary_needs", "behavior", "special_care")
+ANIMAL_FIELDS = (
+    "name", "species", "breed", "age", "gender", "size", "description",
+    "status", "photo", "vaccinated", "spayed_neutered", "dietary_needs",
+    "behavior", "special_care",
+)
 
 def current_user():
     """Look up the account stored in this browser's Flask session.

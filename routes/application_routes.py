@@ -19,14 +19,35 @@ def applications():
     """
     if request.method == "GET":
         with db() as conn:
-            rows = conn.execute("SELECT a.*,animal.name AS animal_name FROM adoptions a JOIN animals animal ON animal.id=a.animal_id WHERE a.user_id=? ORDER BY a.created_at DESC", (session["user_id"],)).fetchall()
+            rows = conn.execute(
+                """
+                SELECT a.*, animal.name AS animal_name
+                FROM adoptions a
+                JOIN animals animal ON animal.id = a.animal_id
+                WHERE a.user_id = ?
+                ORDER BY a.created_at DESC
+                """,
+                (session["user_id"],),
+            ).fetchall()
         return jsonify(applications=[dict(row) for row in rows])
     data, user = json_body(), current_user()
     required = ("animal_id", "name", "email", "phone", "housing", "experience")
     if any(not data.get(field) for field in required):
         return jsonify(error="Please complete all required application fields."), 400
     with db() as conn:
-        item_id = insert_id(conn, "INSERT INTO adoptions(user_id,animal_id,name,email,phone,housing,other_pets,experience) VALUES(?,?,?,?,?,?,?,?)", (user["id"], data["animal_id"], data["name"], data["email"], data["phone"], data["housing"], data.get("other_pets", ""), data["experience"]))
+        item_id = insert_id(
+            conn,
+            """
+            INSERT INTO adoptions
+                (user_id, animal_id, name, email, phone, housing, other_pets, experience)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                user["id"], data["animal_id"], data["name"], data["email"],
+                data["phone"], data["housing"], data.get("other_pets", ""),
+                data["experience"],
+            ),
+        )
     return jsonify(id=item_id, status="Submitted"), 201
 
 
@@ -50,7 +71,19 @@ def volunteer_apply():
     if not data.get("name") or not data.get("email") or not data.get("availability"):
         return jsonify(error="Name, email, and availability are required."), 400
     with db() as conn:
-        item_id = insert_id(conn, "INSERT INTO volunteer_applications(user_id,name,email,phone,interests,availability,experience) VALUES(?,?,?,?,?,?,?)", ((user["id"] if user else None), data["name"], data["email"], data.get("phone", ""), data.get("interests", ""), data.get("availability", ""), data.get("experience", "")))
+        item_id = insert_id(
+            conn,
+            """
+            INSERT INTO volunteer_applications
+                (user_id, name, email, phone, interests, availability, experience)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                user["id"] if user else None, data["name"], data["email"],
+                data.get("phone", ""), data.get("interests", ""),
+                data.get("availability", ""), data.get("experience", ""),
+            ),
+        )
     return jsonify(id=item_id, status="Submitted"), 201
 
 

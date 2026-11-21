@@ -1,70 +1,333 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Meet adoptable animals, apply to adopt or volunteer, and learn about Happy Tails Animal Shelter.">
-  <title>Happy Tails | Animal Shelter</title><link rel="stylesheet" href="style.CSS">
+  <title>Happy Tails | Animal Shelter</title>
+  <link rel="stylesheet" href="style.CSS">
 </head>
 <body>
-  <!-- HEADER: the links jump to sections below. The Login button and these
-       account/admin links have IDs because auth.js finds them by those IDs.
-       JavaScript hides account/admin links until the visitor's role is known. -->
+  <!-- HEADER: links jump to page sections; JavaScript shows account tools by role. -->
   <header class="navbar">
     <a href="#home" class="logo">🐾 Happy Tails</a>
-    <nav aria-label="Main navigation"><a href="#home">Home</a><a href="#animals">Animals</a><a href="#help">Volunteer</a><a href="#contact-form">Contact</a><a href="#account-panel" id="account-link" hidden>My Account</a><a href="#admin-panel" id="admin-link" hidden>Add Animal</a></nav>
-    <div class="nav-actions"><button type="button" class="login-button" id="login-button">Log In</button><a href="#animals" class="nav-button">Find a Friend</a></div>
+    <nav aria-label="Main navigation">
+      <a href="#home">Home</a>
+      <a href="#animals">Animals</a>
+      <a href="#help">Volunteer</a>
+      <a href="#contact-form">Contact</a>
+      <a href="#account-panel" id="account-link" hidden>My Account</a>
+      <a href="#admin-panel" id="admin-link" hidden>Add Animal</a>
+    </nav>
+    <div class="nav-actions">
+      <button type="button" class="login-button" id="login-button">Log In</button>
+      <a href="#animals" class="nav-button">Find a Friend</a>
+    </div>
   </header>
 
-  <!-- MAIN CONTENT: each section is one visible area of the home page. Links
-       such as href="#animals" jump to the section whose id is "animals". -->
+  <!-- MAIN CONTENT: each section is a page area that navigation links can target. -->
   <main>
-    <section class="hero" id="home"><div class="hero-content"><span class="eyebrow">WELCOME TO HAPPY TAILS</span><h1>Every animal deserves a <span>loving home.</span></h1><p>We rescue, protect, and care for animals in need. Find your new best friend or lend a helping hand.</p><div class="hero-buttons"><a href="#animals" class="primary-button">Meet Our Animals →</a><a href="#help" class="secondary-button">Volunteer with us</a></div><div class="hero-note">❤️ Every adoption makes a difference.</div></div><div class="hero-image"><img src="https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=1200" alt="Two happy dogs"><div class="image-label"><span>🐶</span><div><strong>Find your best friend</strong><small>They are waiting for you</small></div></div></div></section>
+    <!-- Welcome message and the two main actions for a visitor. -->
+    <section class="hero" id="home">
+      <div class="hero-content">
+        <span class="eyebrow">WELCOME TO HAPPY TAILS</span>
+        <h1>Every animal deserves a <span>loving home.</span></h1>
+        <p>We rescue, protect, and care for animals in need. Find your new best friend or lend a helping hand.</p>
+        <div class="hero-buttons">
+          <a href="#animals" class="primary-button">Meet Our Animals →</a>
+          <a href="#help" class="secondary-button">Volunteer with us</a>
+        </div>
+        <div class="hero-note">❤️ Every adoption makes a difference.</div>
+      </div>
+      <div class="hero-image">
+        <img src="https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=1200" alt="Two happy dogs">
+        <div class="image-label">
+          <span>🐶</span>
+          <div>
+            <strong>Find your best friend</strong>
+            <small>They are waiting for you</small>
+          </div>
+        </div>
+      </div>
+    </section>
 
-    <!-- Shelter impact metrics displayed below the welcome banner. -->
-    <section class="stats"><div><h2>120+</h2><p>Animals Rescued</p></div><div><h2>85+</h2><p>Happy Adoptions</p></div><div><h2>30+</h2><p>Volunteers</p></div><div><h2>100%</h2><p>Made with Love</p></div></section>
+    <!-- Small impact numbers shown below the welcome section. -->
+    <section class="stats">
+      <div><h2>120+</h2><p>Animals Rescued</p></div>
+      <div><h2>85+</h2><p>Happy Adoptions</p></div>
+      <div><h2>30+</h2><p>Volunteers</p></div>
+      <div><h2>100%</h2><p>Made with Love</p></div>
+    </section>
 
-    <!-- ANIMAL SEARCH: each input's name is sent to the backend as a filter.
-         The animal-grid and animal-pagination containers start empty; auth.js
-         fills them with database results and paging buttons after page load. -->
-    <section class="section" id="animals"><div class="section-heading"><span class="eyebrow">MEET YOUR NEW FRIEND</span><h2>Waiting for a <span>forever home.</span></h2><p>Search available animals, learn about their care, and submit an adoption application.</p></div>
-      <form class="animal-filters" id="animal-filters" aria-label="Search and filter animals"><label>Search<input name="search" placeholder="Name, breed, or keyword"></label><label>Type<select name="species"><option value="">All animals</option><option>Dog</option><option>Cat</option><option>Other</option></select></label><label>Breed<input name="breed" placeholder="Any breed"></label><label>Age<input name="age" placeholder="Any age"></label><label>Size<select name="size"><option value="">Any size</option><option>Small</option><option>Medium</option><option>Large</option></select></label><label>Gender<select name="gender"><option value="">Any</option><option>Female</option><option>Male</option></select></label><button class="primary-button" type="submit">Search</button></form>
+    <!-- Animal search: input names are sent to Flask as filters. The empty results
+         containers are filled by auth.js after it receives data from the backend. -->
+    <section class="section" id="animals">
+      <div class="section-heading">
+        <span class="eyebrow">MEET YOUR NEW FRIEND</span>
+        <h2>Waiting for a <span>forever home.</span></h2>
+        <p>Search available animals, learn about their care, and submit an adoption application.</p>
+      </div>
+      <form class="animal-filters" id="animal-filters" aria-label="Search and filter animals">
+        <label>Search<input name="search" placeholder="Name, breed, or keyword"></label>
+        <label>Type
+          <select name="species">
+            <option value="">All animals</option>
+            <option>Dog</option>
+            <option>Cat</option>
+            <option>Other</option>
+          </select>
+        </label>
+        <label>Breed<input name="breed" placeholder="Any breed"></label>
+        <label>Age<input name="age" placeholder="Any age"></label>
+        <label>Size
+          <select name="size">
+            <option value="">Any size</option>
+            <option>Small</option>
+            <option>Medium</option>
+            <option>Large</option>
+          </select>
+        </label>
+        <label>Gender
+          <select name="gender">
+            <option value="">Any</option>
+            <option>Female</option>
+            <option>Male</option>
+          </select>
+        </label>
+        <button class="primary-button" type="submit">Search</button>
+      </form>
       <p class="animal-feedback" id="animal-feedback" role="status" aria-live="polite"></p>
       <div class="animal-grid" id="animal-grid" aria-live="polite"></div>
       <nav class="animal-pagination" id="animal-pagination" aria-label="Animal listing pages"></nav>
     </section>
 
-    <!-- MY ACCOUNT: this dialog is hidden until login. The profile form saves
-         personal details; the two empty divs are filled with saved animals
-         and adoption applications by auth.js. -->
-    <dialog class="account-panel section" id="account-panel" aria-labelledby="account-title"><button type="button" class="auth-close" data-close-dialog="account-panel" aria-label="Close account">&times;</button><span class="eyebrow">YOUR ACCOUNT</span><h2 id="account-title">Profile and activity</h2><div class="account-columns"><form id="profile-form" class="form-card"><h3>My profile</h3><label>Full name<input name="name" required></label><label>Phone<input name="phone" type="tel"></label><label>Address<input name="address"></label><label>Pet ownership experience<textarea name="experience" rows="3"></textarea></label><label>Current pets<textarea name="pets" rows="2"></textarea></label><button class="primary-button">Save Profile</button><p class="form-message" id="profile-message" role="status"></p></form><div class="form-card"><h3>Saved animals</h3><div id="favorite-list"></div></div><div class="form-card"><h3>Adoption applications</h3><div id="application-list"></div></div></div></dialog>
+    <!-- My Account is a dialog. JavaScript fills in the saved animals and applications. -->
+    <dialog class="account-panel section" id="account-panel" aria-labelledby="account-title">
+      <button type="button" class="auth-close" data-close-dialog="account-panel" aria-label="Close account">&times;</button>
+      <span class="eyebrow">YOUR ACCOUNT</span>
+      <h2 id="account-title">Profile and activity</h2>
+      <div class="account-columns">
+        <form id="profile-form" class="form-card">
+          <h3>My profile</h3>
+          <label>Full name<input name="name" required></label>
+          <label>Phone<input name="phone" type="tel"></label>
+          <label>Address<input name="address"></label>
+          <label>Pet ownership experience<textarea name="experience" rows="3"></textarea></label>
+          <label>Current pets<textarea name="pets" rows="2"></textarea></label>
+          <button class="primary-button">Save Profile</button>
+          <p class="form-message" id="profile-message" role="status"></p>
+        </form>
+        <div class="form-card">
+          <h3>Saved animals</h3>
+          <div id="favorite-list"></div>
+        </div>
+        <div class="form-card">
+          <h3>Adoption applications</h3>
+          <div id="application-list"></div>
+        </div>
+      </div>
+    </dialog>
 
-    <section class="about section" id="about"><div class="about-image"><img src="https://images.unsplash.com/photo-1450778869180-41d0601e046e?w=1000" alt="Dog receiving care"></div><div class="about-content"><span class="eyebrow">WHO WE ARE</span><h2>A little kindness can change a <span>life.</span></h2><p>Happy Tails is an animal shelter dedicated to rescuing abandoned animals and helping them find safe, caring, and loving families.</p><div class="about-feature"><span>🐾</span><div><h3>Rescue & Protect</h3><p>A safe place for animals in need.</p></div></div><div class="about-feature"><span>❤️</span><div><h3>Medical Care</h3><p>Proper care and support for every animal.</p></div></div><div class="about-feature"><span>🏡</span><div><h3>Find Loving Homes</h3><p>Connecting animals with forever families.</p></div></div></div></section>
+    <!-- Short description of the shelter's mission and care. -->
+    <section class="about section" id="about">
+      <div class="about-image">
+        <img src="https://images.unsplash.com/photo-1450778869180-41d0601e046e?w=1000" alt="Dog receiving care">
+      </div>
+      <div class="about-content">
+        <span class="eyebrow">WHO WE ARE</span>
+        <h2>A little kindness can change a <span>life.</span></h2>
+        <p>Happy Tails is an animal shelter dedicated to rescuing abandoned animals and helping them find safe, caring, and loving families.</p>
+        <div class="about-feature">
+          <span>🐾</span>
+          <div><h3>Rescue & Protect</h3><p>A safe place for animals in need.</p></div>
+        </div>
+        <div class="about-feature">
+          <span>❤️</span>
+          <div><h3>Medical Care</h3><p>Proper care and support for every animal.</p></div>
+        </div>
+        <div class="about-feature">
+          <span>🏡</span>
+          <div><h3>Find Loving Homes</h3><p>Connecting animals with forever families.</p></div>
+        </div>
+      </div>
+    </section>
 
-    <!-- VOLUNTEERING: auth.js fills opportunity-grid with available roles.
-         The form below collects the visitor's interests and schedule. -->
-    <section class="help section" id="help"><span class="eyebrow">MAKE A DIFFERENCE</span><h2>Volunteer and <span>help.</span></h2><p>Explore current opportunities and submit a volunteer application.</p><div class="help-grid" id="opportunity-grid"></div><form id="volunteer-form" class="form-card volunteer-form"><h3>Volunteer application</h3><div class="form-row"><label>Name<input name="name" required></label><label>Email<input name="email" type="email" required></label><label>Phone<input name="phone" type="tel"></label></div><label>I'm interested in<textarea name="interests" rows="2" placeholder="Animal care, events, fostering…"></textarea></label><label>Availability<input name="availability" required placeholder="Days and times that work for you"></label><label>Relevant experience<textarea name="experience" rows="2"></textarea></label><button class="primary-button">Apply to Volunteer</button><p class="form-message" id="volunteer-message" role="status"></p></form></section>
+    <!-- Volunteer opportunities are loaded into opportunity-grid by auth.js. -->
+    <section class="help section" id="help">
+      <span class="eyebrow">MAKE A DIFFERENCE</span>
+      <h2>Volunteer and <span>help.</span></h2>
+      <p>Explore current opportunities and submit a volunteer application.</p>
+      <div class="help-grid" id="opportunity-grid"></div>
+      <form id="volunteer-form" class="form-card volunteer-form">
+        <h3>Volunteer application</h3>
+        <div class="form-row">
+          <label>Name<input name="name" required></label>
+          <label>Email<input name="email" type="email" required></label>
+          <label>Phone<input name="phone" type="tel"></label>
+        </div>
+        <label>I'm interested in<textarea name="interests" rows="2" placeholder="Animal care, events, fostering…"></textarea></label>
+        <label>Availability<input name="availability" required placeholder="Days and times that work for you"></label>
+        <label>Relevant experience<textarea name="experience" rows="2"></textarea></label>
+        <button class="primary-button">Apply to Volunteer</button>
+        <p class="form-message" id="volunteer-message" role="status"></p>
+      </form>
+    </section>
 
-    <!-- STAFF DASHBOARD: only staff/admin can open this dialog. animal-form
-         creates or edits an animal; admin-application-list shows applications
-         staff can review. IDs here connect the form to auth.js handlers. -->
-    <dialog class="admin-panel section" id="admin-panel" aria-labelledby="admin-title"><button type="button" class="auth-close" data-close-dialog="admin-panel" aria-label="Close admin panel">&times;</button><span class="eyebrow">SHELTER STAFF</span><h2 id="admin-title">Management dashboard</h2><div class="admin-columns"><form id="animal-form" class="form-card"><h3 id="animal-form-title">Add an animal</h3><input type="hidden" name="id"><div class="form-row"><label>Name<input name="name" required></label><label>Type<input name="species" value="Dog"></label><label>Breed<input name="breed"></label></div><div class="form-row"><label>Age<input name="age"></label><label>Gender<select name="gender"><option>Female</option><option>Male</option></select></label><label>Size<select name="size"><option>Small</option><option>Medium</option><option>Large</option></select></label></div><label>Upload animal photo<input name="photo_upload" type="file" accept="image/jpeg,image/png,image/webp,image/gif"><small>JPG, PNG, WebP, or GIF · Max 8 MB</small></label><label>Description<textarea name="description" rows="3"></textarea></label><div class="form-row"><label>Vaccinations<input name="vaccinated"></label><label>Spay/neuter<input name="spayed_neutered"></label><label>Status<select name="status"><option>Available</option><option>Pending</option><option>Adopted</option></select></label></div><label>Dietary needs<input name="dietary_needs"></label><label>Behavior<input name="behavior"></label><label>Special care<textarea name="special_care" rows="2"></textarea></label><button class="primary-button">Save Animal</button> <button type="button" class="secondary-button" id="animal-cancel">Clear</button><p class="form-message" id="animal-message" role="status"></p></form><div class="form-card"><h3>Adoption and volunteer applications</h3><div id="admin-application-list"></div></div></div></dialog>
+    <!-- Staff-only dashboard for animal editing and reviewing applications. -->
+    <dialog class="admin-panel section" id="admin-panel" aria-labelledby="admin-title">
+      <button type="button" class="auth-close" data-close-dialog="admin-panel" aria-label="Close admin panel">&times;</button>
+      <span class="eyebrow">SHELTER STAFF</span>
+      <h2 id="admin-title">Management dashboard</h2>
+      <div class="admin-columns">
+        <form id="animal-form" class="form-card">
+          <h3 id="animal-form-title">Add an animal</h3>
+          <input type="hidden" name="id">
+          <div class="form-row">
+            <label>Name<input name="name" required></label>
+            <label>Type<input name="species" value="Dog"></label>
+            <label>Breed<input name="breed"></label>
+          </div>
+          <div class="form-row">
+            <label>Age<input name="age"></label>
+            <label>Gender
+              <select name="gender"><option>Female</option><option>Male</option></select>
+            </label>
+            <label>Size
+              <select name="size"><option>Small</option><option>Medium</option><option>Large</option></select>
+            </label>
+          </div>
+          <label>Upload animal photo
+            <input name="photo_upload" type="file" accept="image/jpeg,image/png,image/webp,image/gif">
+            <small>JPG, PNG, WebP, or GIF · Max 8 MB</small>
+          </label>
+          <label>Description<textarea name="description" rows="3"></textarea></label>
+          <div class="form-row">
+            <label>Vaccinations<input name="vaccinated"></label>
+            <label>Spay/neuter<input name="spayed_neutered"></label>
+            <label>Status
+              <select name="status"><option>Available</option><option>Pending</option><option>Adopted</option></select>
+            </label>
+          </div>
+          <label>Dietary needs<input name="dietary_needs"></label>
+          <label>Behavior<input name="behavior"></label>
+          <label>Special care<textarea name="special_care" rows="2"></textarea></label>
+          <button class="primary-button">Save Animal</button>
+          <button type="button" class="secondary-button" id="animal-cancel">Clear</button>
+          <p class="form-message" id="animal-message" role="status"></p>
+        </form>
+        <div class="form-card">
+          <h3>Adoption and volunteer applications</h3>
+          <div id="admin-application-list"></div>
+        </div>
+      </div>
+    </dialog>
 
-    <section class="contact" id="contact"><div><span class="eyebrow">YOUR NEW FRIEND IS WAITING</span><h2>Be the reason someone gets a second chance.</h2><p>Start your adoption journey with us today.</p><a href="#contact-form" class="light-button">Contact Us →</a></div><div class="contact-paw">🐾</div></section>
-    <!-- CONTACT: the first part shows shelter contact information. The form
-         sends the visitor's question, optionally connected to a selected animal. -->
-    <section class="contact-form-section section" id="contact-form"><div class="section-heading"><span class="eyebrow">GET IN TOUCH</span><h2>We'd love to hear from you.</h2><p>Ask us about an animal or send the shelter team a message.</p></div><div class="contact-details"><p><strong>Email:</strong> hello@happytails.com</p><p><strong>Phone:</strong> (555) 010-2026</p><p><strong>Location:</strong> 125 Meadow Lane, Springfield</p><p><strong>Hours:</strong> Mon–Fri 9 AM–6 PM · Sat–Sun 10 AM–4 PM</p><p>Follow us on <a href="https://instagram.com" target="_blank" rel="noreferrer">Instagram</a> and <a href="https://facebook.com" target="_blank" rel="noreferrer">Facebook</a>.</p></div><form id="contact-form" class="form-card"><div class="form-row"><label>Name<input name="name" required></label><label>Email<input name="email" type="email" required></label></div><label>Animal (optional)<select name="animal_id" id="contact-animal"><option value="">General question</option></select></label><label>Message<textarea name="message" rows="4" required></textarea></label><button class="primary-button">Send Message</button><p class="form-message" id="contact-message" role="status"></p></form></section>
+    <!-- Contact call-to-action banner that leads to the form below. -->
+    <section class="contact" id="contact">
+      <div>
+        <span class="eyebrow">YOUR NEW FRIEND IS WAITING</span>
+        <h2>Be the reason someone gets a second chance.</h2>
+        <p>Start your adoption journey with us today.</p>
+        <a href="#contact-form" class="light-button">Contact Us →</a>
+      </div>
+      <div class="contact-paw">🐾</div>
+    </section>
+
+    <!-- Contact details and visitor message form. -->
+    <section class="contact-form-section section" id="contact-form">
+      <div class="section-heading">
+        <span class="eyebrow">GET IN TOUCH</span>
+        <h2>We'd love to hear from you.</h2>
+        <p>Ask us about an animal or send the shelter team a message.</p>
+      </div>
+      <div class="contact-details">
+        <p><strong>Email:</strong> hello@happytails.com</p>
+        <p><strong>Phone:</strong> (555) 010-2026</p>
+        <p><strong>Location:</strong> 125 Meadow Lane, Springfield</p>
+        <p><strong>Hours:</strong> Mon–Fri 9 AM–6 PM · Sat–Sun 10 AM–4 PM</p>
+        <p>Follow us on
+          <a href="https://instagram.com" target="_blank" rel="noreferrer">Instagram</a>
+          and
+          <a href="https://facebook.com" target="_blank" rel="noreferrer">Facebook</a>.
+        </p>
+      </div>
+      <form id="contact-form" class="form-card">
+        <div class="form-row">
+          <label>Name<input name="name" required></label>
+          <label>Email<input name="email" type="email" required></label>
+        </div>
+        <label>Animal (optional)
+          <select name="animal_id" id="contact-animal">
+            <option value="">General question</option>
+          </select>
+        </label>
+        <label>Message<textarea name="message" rows="4" required></textarea></label>
+        <button class="primary-button">Send Message</button>
+        <p class="form-message" id="contact-message" role="status"></p>
+      </form>
+    </section>
   </main>
 
-  <footer class="footer"><a href="#home" class="logo">🐾 Happy Tails</a><p>Giving every animal a chance to be loved.</p><span>© 2026 Happy Tails Animal Shelter.</span></footer>
+  <!-- Footer content appears at the bottom of every page view. -->
+  <footer class="footer">
+    <a href="#home" class="logo">🐾 Happy Tails</a>
+    <p>Giving every animal a chance to be loved.</p>
+    <span>© 2026 Happy Tails Animal Shelter.</span>
+  </footer>
 
-  <!-- LOGIN/REGISTER: auth.js switches between login and account creation.
-       The name and role fields begin hidden and appear only in registration mode. -->
-  <dialog class="auth-dialog" id="auth-dialog" aria-labelledby="auth-title"><button type="button" class="auth-close" id="auth-close" aria-label="Close">&times;</button><span class="eyebrow">HAPPY TAILS ACCOUNT</span><h2 id="auth-title">Welcome back</h2><p class="auth-intro" id="auth-intro">Log in to continue.</p><form id="auth-form"><div id="register-name" hidden><label>Full name<input name="name" autocomplete="name"></label></div><label>Email<input name="email" type="email" autocomplete="email" required></label><label>Password<input name="password" type="password" autocomplete="current-password" minlength="8" required></label><div id="role-field" hidden><label>Account type<select name="role"><option value="volunteer">Volunteer</option><option value="staff">Staff</option><option value="administrator">Administrator</option></select></label></div><button class="primary-button auth-submit" id="auth-submit">Log In</button></form><p class="auth-message" id="auth-message" role="status" aria-live="polite"></p><button type="button" class="auth-switch" id="auth-switch">Create an account</button></dialog>
-  <!-- ANIMAL DETAILS: empty container is filled with health, behavior, and
-       care information when a visitor clicks View profile. -->
-  <dialog class="detail-dialog" id="detail-dialog"><button type="button" class="auth-close" id="detail-close" aria-label="Close">&times;</button><div id="animal-detail"></div></dialog>
-  <!-- ADOPTION APPLICATION: auth.js fills the animal ID and account contact
-       details before showing this form. Required fields must be completed. -->
-  <dialog class="application-dialog" id="application-dialog"><button type="button" class="auth-close" id="application-close" aria-label="Close">&times;</button><h2>Adoption application</h2><p id="application-animal"></p><form id="application-form"><input type="hidden" name="animal_id"><label>Applicant name<input name="name" required></label><label>Email<input name="email" type="email" required></label><label>Phone<input name="phone" type="tel" required></label><label>Living situation<textarea name="housing" rows="3" required placeholder="Home type, landlord approval, household members"></textarea></label><label>Other pets<textarea name="other_pets" rows="2"></textarea></label><label>Pet ownership experience<textarea name="experience" rows="3" required></textarea></label><button class="primary-button">Submit application</button><p class="form-message" id="application-message" role="status"></p></form></dialog>
+  <!-- Login/register dialog. auth.js shows the extra name and role fields only
+       when the visitor switches from login mode to registration mode. -->
+  <dialog class="auth-dialog" id="auth-dialog" aria-labelledby="auth-title">
+    <button type="button" class="auth-close" id="auth-close" aria-label="Close">&times;</button>
+    <span class="eyebrow">HAPPY TAILS ACCOUNT</span>
+    <h2 id="auth-title">Welcome back</h2>
+    <p class="auth-intro" id="auth-intro">Log in to continue.</p>
+    <form id="auth-form">
+      <div id="register-name" hidden>
+        <label>Full name<input name="name" autocomplete="name"></label>
+      </div>
+      <label>Email<input name="email" type="email" autocomplete="email" required></label>
+      <label>Password<input name="password" type="password" autocomplete="current-password" minlength="8" required></label>
+      <div id="role-field" hidden>
+        <label>Account type
+          <select name="role">
+            <option value="volunteer">Volunteer</option>
+            <option value="staff">Staff</option>
+            <option value="administrator">Administrator</option>
+          </select>
+        </label>
+      </div>
+      <button class="primary-button auth-submit" id="auth-submit">Log In</button>
+    </form>
+    <p class="auth-message" id="auth-message" role="status" aria-live="polite"></p>
+    <button type="button" class="auth-switch" id="auth-switch">Create an account</button>
+  </dialog>
+
+  <!-- auth.js inserts the selected animal's full profile into this dialog. -->
+  <dialog class="detail-dialog" id="detail-dialog">
+    <button type="button" class="auth-close" id="detail-close" aria-label="Close">&times;</button>
+    <div id="animal-detail"></div>
+  </dialog>
+
+  <!-- The adoption form is prefilled with the selected animal and account details. -->
+  <dialog class="application-dialog" id="application-dialog">
+    <button type="button" class="auth-close" id="application-close" aria-label="Close">&times;</button>
+    <h2>Adoption application</h2>
+    <p id="application-animal"></p>
+    <form id="application-form">
+      <input type="hidden" name="animal_id">
+      <label>Applicant name<input name="name" required></label>
+      <label>Email<input name="email" type="email" required></label>
+      <label>Phone<input name="phone" type="tel" required></label>
+      <label>Living situation<textarea name="housing" rows="3" required placeholder="Home type, landlord approval, household members"></textarea></label>
+      <label>Other pets<textarea name="other_pets" rows="2"></textarea></label>
+      <label>Pet ownership experience<textarea name="experience" rows="3" required></textarea></label>
+      <button class="primary-button">Submit application</button>
+      <p class="form-message" id="application-message" role="status"></p>
+    </form>
+  </dialog>
+
+  <!-- Load the browser code after all page elements exist so its selectors work. -->
   <script src="auth.js"></script>
-</body></html>
+</body>
+</html>

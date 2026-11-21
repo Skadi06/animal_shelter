@@ -565,81 +565,444 @@ a {
     }
 }
 
-/* PORTAL FEATURES: styles for interactive search, account forms, dialog boxes,
-   application status, and staff controls. The class names match index.html. */
-[hidden] { display: none !important; }
-/* FILTER FORM: CSS grid places each label/input in a column. Repeat() creates
-   four columns on wide screens; the media queries below reduce that number. */
-.animal-filters { display: grid; grid-template-columns: repeat(4, minmax(130px, 1fr)); gap: 14px; align-items: end; margin: 0 0 35px; padding: 22px; background: #edf0e8; border-radius: 18px; }
-.animal-filters label, .form-card label { display: block; color: #536258; font-size: 13px; font-weight: 700; }
-.animal-filters input, .animal-filters select, .form-card input, .form-card select, .form-card textarea, .application-dialog input, .application-dialog textarea { width: 100%; margin-top: 6px; padding: 11px 12px; border: 1px solid #d9ded6; border-radius: 9px; background: #fff; color: #263b32; font: inherit; }
-.animal-filters button { min-height: 44px; }
-.animal-pagination { display: flex; justify-content: center; align-items: center; gap: 18px; margin-top: 32px; color: #68756b; font-size: 14px; }
-.animal-pagination button { padding: 10px 16px; border: 1px solid #d9ded6; border-radius: 24px; background: #fff; color: #315b43; font: inherit; cursor: pointer; }
-.animal-pagination button:disabled { opacity: .45; cursor: default; }
-.animal-feedback { min-height: 22px; margin: 0 0 12px; color: #315b43; font-size: 14px; }
-.animal-feedback[data-error="true"] { color: #a63f35; }
-/* CARD DETAILS/ACTIONS: status colors communicate availability; flexbox lets
-   action buttons wrap onto another line when the card is narrow. */
-.animal-summary { padding: 0 8px; color: #788176; font-size: 13px; line-height: 1.6; }
-.status-badge { display: inline-block; margin: 10px 8px; padding: 6px 11px; border-radius: 20px; background: #edf0e8; color: #315b43; font-size: 12px; font-weight: 700; }
-.status-pending { background: #fff1d8; color: #8b621f; }
-.status-adopted { background: #eee; color: #555; }
-.animal-actions { display: flex; flex-wrap: wrap; gap: 8px; padding: 12px 8px; }
-.animal-actions button { font: inherit; cursor: pointer; }
-.animal-actions .primary-button { border: 0; }
-.admin-animal-actions { display: flex; gap: 10px; padding: 8px; }
-.admin-animal-actions button, .application-item button { color: #315b43; cursor: pointer; }
-.account-panel, .admin-panel { width: min(1180px, calc(100% - 32px)); max-height: 90vh; overflow: auto; margin: auto; padding: 50px 36px; border: 0; border-radius: 24px; background: #fbf9f3; color: #263b32; box-shadow: 0 24px 80px #14251d40; }
-.account-panel::backdrop, .admin-panel::backdrop { background: #14251d99; }
-.account-columns, .admin-columns { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 22px; margin-top: 25px; align-items: start; }
-.form-card { padding: 24px; border-radius: 18px; background: #fff; box-shadow: 0 8px 30px #263b320b; }
-.form-card h3 { margin: 0 0 18px; font-family: 'Playfair Display', serif; font-size: 22px; }
-.form-card label { margin: 12px 0; }
-.form-card button { cursor: pointer; }
-.form-card input[type="file"] { padding: 9px; }
-.form-card label small { display: block; margin-top: 6px; color: #899087; font-weight: 400; }
-.form-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
-.volunteer-form, #contact-form { max-width: 900px; margin: 35px auto 0; }
-.form-message { min-height: 20px; margin-top: 10px; color: #315b43; font-size: 13px; }
-.form-message[data-error="true"] { color: #a63f35; }
-.application-item { display: grid; gap: 7px; padding: 13px 0; border-bottom: 1px solid #edf0e8; color: #536258; font-size: 13px; }
-.application-item small { color: #899087; }
-.empty-state { padding: 20px; color: #788176; }
-/* DIALOGS AND FORMS: dialogs sit above the page with a dark backdrop. Form
-   controls share spacing and borders so they are easy to identify and use. */
-.contact-form-section { display: grid; grid-template-columns: 1fr 1fr; gap: 20px 50px; align-items: start; }
-.contact-form-section .section-heading { grid-column: 1 / -1; }
-.contact-details { color: #68756b; line-height: 1.9; }
-.contact-details a { color: #315b43; text-decoration: underline; }
-.auth-dialog, .detail-dialog, .application-dialog { width: min(520px, calc(100% - 28px)); max-height: 90vh; overflow: auto; margin: auto; padding: 34px; border: 0; border-radius: 22px; background: #fff; color: #263b32; box-shadow: 0 24px 80px #14251d40; }
-.auth-dialog::backdrop, .detail-dialog::backdrop, .application-dialog::backdrop { background: #14251d99; }
-.auth-dialog h2, .application-dialog h2, .detail-dialog h2 { margin: 12px 0; font-family: 'Playfair Display', serif; }
-.auth-intro { margin-bottom: 22px; color: #788176; }
-.auth-dialog label, .application-dialog label { display: block; margin: 12px 0; color: #536258; font-size: 13px; font-weight: 700; }
-.auth-dialog input, .auth-dialog select, .application-dialog input, .application-dialog textarea { width: 100%; margin-top: 6px; padding: 12px; border: 1px solid #d9ded6; border-radius: 9px; font: inherit; }
-.auth-dialog input:focus { outline: 2px solid #76977e; border-color: transparent; }
-.auth-submit { width: 100%; margin-top: 14px; border: 0; cursor: pointer; }
-.auth-close { position: sticky; float: right; top: 0; border: 0; background: #fff; color: #788176; font-size: 28px; cursor: pointer; }
-.auth-switch { display: block; margin: 17px auto 0; border: 0; background: none; color: #315b43; font: inherit; font-weight: 700; cursor: pointer; }
-.auth-message { min-height: 20px; margin-top: 12px; color: #315b43; font-size: 13px; line-height: 1.5; }
-.auth-message[data-error="true"] { color: #a63f35; }
-.detail-photo { width: 100%; max-height: 280px; border-radius: 14px; object-fit: cover; }
-.detail-dialog p { margin: 10px 0; line-height: 1.7; color: #68756b; }
-.detail-dialog h3 { margin-top: 20px; }
-#animal-form { grid-column: 1; }
+/*
+  PORTAL FEATURES
+  These rules style the search filters, account forms, animal cards, and popup
+  dialogs used by the interactive website. A selector (the text before {) says
+  which HTML element gets the styles. Properties inside braces change its look.
+*/
+
+/* Hide elements that JavaScript marks as unavailable to the current role. */
+[hidden] {
+  display: none !important;
+}
+
+/* Place animal search fields in four columns on wide screens. */
+.animal-filters {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(130px, 1fr));
+  gap: 14px;
+  align-items: end;
+  margin: 0 0 35px;
+  padding: 22px;
+  background: #edf0e8;
+  border-radius: 18px;
+}
+
+/* Make filter labels and form labels readable and consistent. */
+.animal-filters label,
+.form-card label {
+  display: block;
+  color: #536258;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* Give text fields and dropdowns the same width, spacing, and border style. */
+.animal-filters input,
+.animal-filters select,
+.form-card input,
+.form-card select,
+.form-card textarea,
+.application-dialog input,
+.application-dialog textarea {
+  width: 100%;
+  margin-top: 6px;
+  padding: 11px 12px;
+  border: 1px solid #d9ded6;
+  border-radius: 9px;
+  background: #fff;
+  color: #263b32;
+  font: inherit;
+}
+
+.animal-filters button {
+  min-height: 44px;
+}
+
+/* Flexbox centers page buttons and their page-count label in one row. */
+.animal-pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 18px;
+  margin-top: 32px;
+  color: #68756b;
+  font-size: 14px;
+}
+
+.animal-pagination button {
+  padding: 10px 16px;
+  border: 1px solid #d9ded6;
+  border-radius: 24px;
+  background: #fff;
+  color: #315b43;
+  font: inherit;
+  cursor: pointer;
+}
+
+/* A disabled button cannot be used to move past the first/last page. */
+.animal-pagination button:disabled {
+  opacity: .45;
+  cursor: default;
+}
+
+/* Keep a space for feedback so results do not jump when a message appears. */
+.animal-feedback {
+  min-height: 22px;
+  margin: 0 0 12px;
+  color: #315b43;
+  font-size: 14px;
+}
+
+.animal-feedback[data-error="true"] {
+  color: #a63f35;
+}
+
+/* Animal summary text and status badges describe each result card. */
+.animal-summary {
+  padding: 0 8px;
+  color: #788176;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.status-badge {
+  display: inline-block;
+  margin: 10px 8px;
+  padding: 6px 11px;
+  border-radius: 20px;
+  background: #edf0e8;
+  color: #315b43;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.status-pending {
+  background: #fff1d8;
+  color: #8b621f;
+}
+
+.status-adopted {
+  background: #eee;
+  color: #555;
+}
+
+/* Flex lets animal buttons wrap when there is not enough horizontal space. */
+.animal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px 8px;
+}
+
+.animal-actions button {
+  font: inherit;
+  cursor: pointer;
+}
+
+.animal-actions .primary-button {
+  border: 0;
+}
+
+/* Staff controls and application status dropdowns appear in these areas. */
+.admin-animal-actions {
+  display: flex;
+  gap: 10px;
+  padding: 8px;
+}
+
+.admin-animal-actions button,
+.application-item button {
+  color: #315b43;
+  cursor: pointer;
+}
+
+/* Account and staff dialogs are centered, scrollable panels over the page. */
+.account-panel,
+.admin-panel {
+  width: min(1180px, calc(100% - 32px));
+  max-height: 90vh;
+  overflow: auto;
+  margin: auto;
+  padding: 50px 36px;
+  border: 0;
+  border-radius: 24px;
+  background: #fbf9f3;
+  color: #263b32;
+  box-shadow: 0 24px 80px #14251d40;
+}
+
+.account-panel::backdrop,
+.admin-panel::backdrop {
+  background: #14251d99;
+}
+
+/* Grid columns place profile cards next to each other on wide screens. */
+.account-columns,
+.admin-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px;
+  margin-top: 25px;
+  align-items: start;
+}
+
+/* White card background separates each form or list from its panel. */
+.form-card {
+  padding: 24px;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 8px 30px #263b320b;
+}
+
+.form-card h3 {
+  margin: 0 0 18px;
+  font-family: 'Playfair Display', serif;
+  font-size: 22px;
+}
+
+.form-card label {
+  margin: 12px 0;
+}
+
+.form-card button {
+  cursor: pointer;
+}
+
+.form-card input[type="file"] {
+  padding: 9px;
+}
+
+.form-card label small {
+  display: block;
+  margin-top: 6px;
+  color: #899087;
+  font-weight: 400;
+}
+
+/* Put related form fields side by side; phone rules below adjust this grid. */
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.volunteer-form,
+#contact-form {
+  max-width: 900px;
+  margin: 35px auto 0;
+}
+
+.form-message {
+  min-height: 20px;
+  margin-top: 10px;
+  color: #315b43;
+  font-size: 13px;
+}
+
+.form-message[data-error="true"] {
+  color: #a63f35;
+}
+
+/* Display each submitted application as a separated row in account/admin lists. */
+.application-item {
+  display: grid;
+  gap: 7px;
+  padding: 13px 0;
+  border-bottom: 1px solid #edf0e8;
+  color: #536258;
+  font-size: 13px;
+}
+
+.application-item small {
+  color: #899087;
+}
+
+.empty-state {
+  padding: 20px;
+  color: #788176;
+}
+
+/* On desktop, contact details and the message form sit in two columns. */
+.contact-form-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px 50px;
+  align-items: start;
+}
+
+.contact-form-section .section-heading {
+  grid-column: 1 / -1;
+}
+
+.contact-details {
+  color: #68756b;
+  line-height: 1.9;
+}
+
+.contact-details a {
+  color: #315b43;
+  text-decoration: underline;
+}
+
+/* Login, profile detail, and adoption forms share the same popup appearance. */
+.auth-dialog,
+.detail-dialog,
+.application-dialog {
+  width: min(520px, calc(100% - 28px));
+  max-height: 90vh;
+  overflow: auto;
+  margin: auto;
+  padding: 34px;
+  border: 0;
+  border-radius: 22px;
+  background: #fff;
+  color: #263b32;
+  box-shadow: 0 24px 80px #14251d40;
+}
+
+.auth-dialog::backdrop,
+.detail-dialog::backdrop,
+.application-dialog::backdrop {
+  background: #14251d99;
+}
+
+.auth-dialog h2,
+.application-dialog h2,
+.detail-dialog h2 {
+  margin: 12px 0;
+  font-family: 'Playfair Display', serif;
+}
+
+.auth-intro {
+  margin-bottom: 22px;
+  color: #788176;
+}
+
+.auth-dialog label,
+.application-dialog label {
+  display: block;
+  margin: 12px 0;
+  color: #536258;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.auth-dialog input,
+.auth-dialog select,
+.application-dialog input,
+.application-dialog textarea {
+  width: 100%;
+  margin-top: 6px;
+  padding: 12px;
+  border: 1px solid #d9ded6;
+  border-radius: 9px;
+  font: inherit;
+}
+
+.auth-dialog input:focus {
+  outline: 2px solid #76977e;
+  border-color: transparent;
+}
+
+.auth-submit {
+  width: 100%;
+  margin-top: 14px;
+  border: 0;
+  cursor: pointer;
+}
+
+.auth-close {
+  position: sticky;
+  float: right;
+  top: 0;
+  border: 0;
+  background: #fff;
+  color: #788176;
+  font-size: 28px;
+  cursor: pointer;
+}
+
+.auth-switch {
+  display: block;
+  margin: 17px auto 0;
+  border: 0;
+  background: none;
+  color: #315b43;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.auth-message {
+  min-height: 20px;
+  margin-top: 12px;
+  color: #315b43;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.auth-message[data-error="true"] {
+  color: #a63f35;
+}
+
+.detail-photo {
+  width: 100%;
+  max-height: 280px;
+  border-radius: 14px;
+  object-fit: cover;
+}
+
+.detail-dialog p {
+  margin: 10px 0;
+  line-height: 1.7;
+  color: #68756b;
+}
+
+.detail-dialog h3 {
+  margin-top: 20px;
+}
+
+#animal-form {
+  grid-column: 1;
+}
 
 @media (max-width: 850px) {
-  /* At tablet width, reduce the number of columns so each field has room. */
-  .animal-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .account-columns, .admin-columns, .contact-form-section { grid-template-columns: 1fr; }
-  .contact-form-section .section-heading { grid-column: auto; }
-  .form-row { grid-template-columns: 1fr 1fr; }
-}
-@media (max-width: 600px) {
-  /* On phones, stack filters and form fields into one easy-to-tap column. */
-  .animal-filters, .form-row { grid-template-columns: 1fr; }
-  .animal-filters { padding: 16px; }
-  .auth-dialog, .detail-dialog, .application-dialog { padding: 26px 20px; }
+  /* Tablet: use fewer filter columns and stack the larger content panels. */
+  .animal-filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .account-columns,
+  .admin-columns,
+  .contact-form-section {
+    grid-template-columns: 1fr;
+  }
+
+  .contact-form-section .section-heading {
+    grid-column: auto;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 
+@media (max-width: 600px) {
+  /* Phone: stack filter/form controls and reduce popup padding. */
+  .animal-filters,
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .animal-filters {
+    padding: 16px;
+  }
+
+  .auth-dialog,
+  .detail-dialog,
+  .application-dialog {
+    padding: 26px 20px;
+  }
+}

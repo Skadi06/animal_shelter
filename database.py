@@ -182,18 +182,60 @@ def init_db():
             conn.executemany("""INSERT INTO animals
               (name,species,breed,age,gender,size,description,status,photo,vaccinated,spayed_neutered,dietary_needs,behavior,special_care)
               VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)""", [
-                ("Charlie", "Dog", "Golden Retriever", "2 years", "Male", "Large", "A friendly, playful companion who loves long walks and meeting people.", "Available", "https://images.unsplash.com/photo-1552053831-71594a27632d?w=800", "Up to date", "Yes", "Standard adult diet", "Friendly and energetic", "Daily exercise"),
-                ("Bella", "Dog", "Mixed Breed", "8 months", "Female", "Medium", "A curious puppy who is learning quickly and enjoys gentle play.", "Available", "https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=800", "Up to date", "Scheduled", "Puppy food", "Still in training", "Needs puppy socialization"),
-                ("Max", "Dog", "Rescue Dog", "3 years", "Male", "Medium", "A calm, affectionate dog ready for a patient forever family.", "Pending", "https://images.unsplash.com/photo-1517849845537-4d257902454a?w=800", "Up to date", "Yes", "Sensitive stomach; vet-approved food", "Gentle and relaxed", "Slow introductions to new dogs"),
-                ("Mittens", "Cat", "Domestic Shorthair", "1 year", "Female", "Small", "A sweet indoor cat who likes sunny windows and quiet company.", "Available", "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=800", "Up to date", "Yes", "Standard cat diet", "Litter trained", "Indoor home preferred")
+                (
+                    "Charlie", "Dog", "Golden Retriever", "2 years", "Male", "Large",
+                    "A friendly, playful companion who loves long walks and meeting people.",
+                    "Available", "https://images.unsplash.com/photo-1552053831-71594a27632d?w=800",
+                    "Up to date", "Yes", "Standard adult diet",
+                    "Friendly and energetic", "Daily exercise",
+                ),
+                (
+                    "Bella", "Dog", "Mixed Breed", "8 months", "Female", "Medium",
+                    "A curious puppy who is learning quickly and enjoys gentle play.",
+                    "Available", "https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=800",
+                    "Up to date", "Scheduled", "Puppy food",
+                    "Still in training", "Needs puppy socialization",
+                ),
+                (
+                    "Max", "Dog", "Rescue Dog", "3 years", "Male", "Medium",
+                    "A calm, affectionate dog ready for a patient forever family.",
+                    "Pending", "https://images.unsplash.com/photo-1517849845537-4d257902454a?w=800",
+                    "Up to date", "Yes", "Sensitive stomach; vet-approved food",
+                    "Gentle and relaxed", "Slow introductions to new dogs",
+                ),
+                (
+                    "Mittens", "Cat", "Domestic Shorthair", "1 year", "Female", "Small",
+                    "A sweet indoor cat who likes sunny windows and quiet company.",
+                    "Available", "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=800",
+                    "Up to date", "Yes", "Standard cat diet",
+                    "Litter trained", "Indoor home preferred",
+                ),
             ])
         # Add sample dogs by name so existing databases receive these once too.
         # These three extra dogs are inserted by name, even into a database
         # that already had animals before this sample data was introduced.
         sample_dogs = [
-            ("Daisy", "Dog", "Beagle Mix", "4 years", "Female", "Small", "Daisy is a cheerful trail buddy who loves sniffing around the yard and curling up after a walk.", "Available", "https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=800", "Up to date", "Yes", "Standard adult diet", "Social and curious", "Daily walks and a secure yard"),
-            ("Cooper", "Dog", "Labrador Retriever Mix", "1 year", "Male", "Large", "Cooper is an affectionate young dog who enjoys fetch, learning tricks, and spending time with people.", "Available", "https://images.unsplash.com/photo-1518717758536-85ae29035b6d?w=800", "Up to date", "Yes", "Standard adult diet", "Playful and eager to learn", "Needs regular exercise and training"),
-            ("Luna", "Dog", "Terrier Mix", "6 months", "Female", "Small", "Luna is a gentle puppy who is building confidence and would enjoy a patient home with time for training.", "Available", "https://images.unsplash.com/photo-1552053831-71594a27632d?w=800", "In progress", "Scheduled", "Puppy food", "Shy at first, warms up with treats", "Puppy socialization and basic training"),
+            (
+                "Daisy", "Dog", "Beagle Mix", "4 years", "Female", "Small",
+                "Daisy is a cheerful trail buddy who loves sniffing around the yard and curling up after a walk.",
+                "Available", "https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=800",
+                "Up to date", "Yes", "Standard adult diet",
+                "Social and curious", "Daily walks and a secure yard",
+            ),
+            (
+                "Cooper", "Dog", "Labrador Retriever Mix", "1 year", "Male", "Large",
+                "Cooper is an affectionate young dog who enjoys fetch, learning tricks, and spending time with people.",
+                "Available", "https://images.unsplash.com/photo-1518717758536-85ae29035b6d?w=800",
+                "Up to date", "Yes", "Standard adult diet",
+                "Playful and eager to learn", "Needs regular exercise and training",
+            ),
+            (
+                "Luna", "Dog", "Terrier Mix", "6 months", "Female", "Small",
+                "Luna is a gentle puppy who is building confidence and would enjoy a patient home with time for training.",
+                "Available", "https://images.unsplash.com/photo-1552053831-71594a27632d?w=800",
+                "In progress", "Scheduled", "Puppy food",
+                "Shy at first, warms up with treats", "Puppy socialization and basic training",
+            ),
         ]
         for dog in sample_dogs:
             if not conn.execute("SELECT id FROM animals WHERE name=?", (dog[0],)).fetchone():
