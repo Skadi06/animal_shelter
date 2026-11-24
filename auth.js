@@ -148,6 +148,15 @@ async function loadAdminApplications() {
   $("#admin-message-list").innerHTML = messages.length ? messages.map((item) => `<article class="application-item"><strong>${escapeHtml(item.name)} · ${escapeHtml(item.email)}${item.animal_name ? ` · ${escapeHtml(item.animal_name)}` : ""}</strong><p>${escapeHtml(item.message)}</p><label>Reply<textarea data-message-reply="${item.id}" rows="2">${escapeHtml(item.reply || "")}</textarea></label><button type="button" data-send-reply="${item.id}">Save reply</button><small>${escapeHtml(item.created_at)}</small></article>`).join("") : `<p class="empty-state">No customer questions yet.</p>`;
 }
 
+async function refreshAdminApplications() {
+  try {
+    await loadAdminApplications();
+  } catch (error) {
+    $("#admin-application-list").textContent = `Could not load applications: ${error.message}`;
+    $("#admin-message-list").textContent = "";
+  }
+}
+
 async function loadUser() {
   // Ask Flask who owns the current session cookie. After page refresh this
   // restores account controls, saved items, application history, and listings.
@@ -191,9 +200,10 @@ $("#account-link").onclick = (event) => {
   $("#account-panel").showModal();
 };
 // Start with a blank animal form whenever staff open the management dialog.
-$("#admin-link").onclick = (event) => {
+$("#admin-link").onclick = async (event) => {
   event.preventDefault();
   resetAnimalForm();
+  await refreshAdminApplications();
   $("#admin-panel").showModal();
 };
 // Also clear the form when the dialog is closed with Escape or its close button.
