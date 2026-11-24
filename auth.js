@@ -125,12 +125,13 @@ async function loadAccount() {
   if (!user) return;
   const profileForm = $("#profile-form");
   for (const key of ["name", "phone", "address", "experience", "pets"]) profileForm.elements[key].value = user[key] || "";
-  const [favorites, applications] = await Promise.all([api("favorites", { method: "GET" }), api("applications", { method: "GET" })]);
+  const [favorites, applications, messages] = await Promise.all([api("favorites", { method: "GET" }), api("applications", { method: "GET" }), api("messages", { method: "GET" })]);
   // Keep this set in sync with Supabase-backed records so listing buttons
   // immediately show which animals the current account has saved.
   savedAnimalIds = new Set(favorites.animals.map((animal) => Number(animal.id)));
-  $("#favorite-list").innerHTML = favorites.animals.length ? favorites.animals.map((animal) => `<p><a href="#animals">${escapeHtml(animal.name)}</a> · ${escapeHtml(animal.status)} <button data-unfavorite="${animal.id}">Remove</button></p>`).join("") : `<p class="empty-state">Save an animal from the listings to see it here.</p>`;
-  $("#application-list").innerHTML = applications.applications.length ? applications.applications.map((item) => `<article class="application-item"><strong>${escapeHtml(item.animal_name)}</strong><span>${escapeHtml(item.status)}</span><small>Submitted ${escapeHtml(item.created_at)}</small></article>`).join("") : `<p class="empty-state">Your adoption applications will appear here.</p>`;
+  $("#favorite-list").innerHTML = favorites.animals.length ? favorites.animals.map((animal) => `<article class="saved-animal"><img src="${escapeHtml(animal.photo || "https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=800")}" alt="${escapeHtml(animal.name)}"><div><strong>${escapeHtml(animal.name)}</strong><small>${escapeHtml(animal.breed)} · ${escapeHtml(animal.status)}</small><button data-unfavorite="${animal.id}">Remove</button></div></article>`).join("") : `<p class="empty-state">Save an animal from the listings to see it here.</p>`;
+  $("#application-list").innerHTML = applications.applications.length ? applications.applications.map((item) => `<article class="application-item"><strong>${escapeHtml(item.animal_name)}</strong><span>Application: ${escapeHtml(item.status)}</span><span>Adoption: ${escapeHtml(item.adoption_status)}</span><small>Submitted ${escapeHtml(item.created_at)}</small></article>`).join("") : `<p class="empty-state">Your adoption applications will appear here.</p>`;
+  $("#message-list").innerHTML = messages.messages.length ? messages.messages.map((item) => `<article class="application-item"><strong>${escapeHtml(item.animal_name || "General question")}</strong><p>${escapeHtml(item.message)}</p><span>${item.reply ? `Shelter reply: ${escapeHtml(item.reply)}` : "Waiting for a shelter response"}</span><small>${escapeHtml(item.created_at)}</small></article>`).join("") : `<p class="empty-state">Questions you send while signed in and shelter replies will appear here.</p>`;
 }
 
 async function loadAdminApplications() {
@@ -143,6 +144,8 @@ async function loadAdminApplications() {
     ...result.volunteers.map((item) => ({ ...item, kind: "volunteer", label: "Volunteer application", applicant: item.name }))
   ];
   $("#admin-application-list").innerHTML = all.length ? all.map((item) => `<article class="application-item"><strong>${escapeHtml(item.label)}</strong><span>${escapeHtml(item.applicant)} · ${escapeHtml(item.email)}</span><select data-status-kind="${item.kind}" data-status-id="${item.id}">${["Submitted", "In Review", "Approved", "Declined"].map((status) => `<option ${status === item.status ? "selected" : ""}>${status}</option>`).join("")}</select><small>${escapeHtml(item.created_at)}</small></article>`).join("") : `<p class="empty-state">No applications have been submitted yet.</p>`;
+  const { messages } = await api("admin/messages", { method: "GET" });
+  $("#admin-message-list").innerHTML = messages.length ? messages.map((item) => `<article class="application-item"><strong>${escapeHtml(item.name)} · ${escapeHtml(item.email)}${item.animal_name ? ` · ${escapeHtml(item.animal_name)}` : ""}</strong><p>${escapeHtml(item.message)}</p><label>Reply<textarea data-message-reply="${item.id}" rows="2">${escapeHtml(item.reply || "")}</textarea></label><button type="button" data-send-reply="${item.id}">Save reply</button><small>${escapeHtml(item.created_at)}</small></article>`).join("") : `<p class="empty-state">No customer questions yet.</p>`;
 }
 
 async function loadUser() {
@@ -152,6 +155,8 @@ async function loadUser() {
   user = data.user;
   refreshRoleControls();
   if (user) {
+    $("#contact-form").elements.name.value = user.name || "";
+    $("#contact-form").elements.email.value = user.email || "";
     await loadAccount();
     await loadAdminApplications();
   }
@@ -171,7 +176,6 @@ $("#login-button").onclick = async () => {
     signupMode = false;
     $("#auth-title").textContent = "Welcome back";
     $("#auth-intro").textContent = "Log in to continue.";
-    $("#role-field").hidden = true;
     $("#register-name").hidden = true;
     $("#auth-submit").textContent = "Log In";
     $("#auth-switch").textContent = "Create an account";
@@ -206,7 +210,6 @@ $("#auth-switch").onclick = (event) => {
   signupMode = !signupMode;
   $("#auth-title").textContent = signupMode ? "Create your account" : "Welcome back";
   $("#auth-intro").textContent = signupMode ? "Create an account to save favorites and track applications." : "Log in to continue.";
-  $("#role-field").hidden = !signupMode;
   $("#register-name").hidden = !signupMode;
   $("#register-name input").required = signupMode;
   $("#auth-submit").textContent = signupMode ? "Create Account" : "Log In";
@@ -220,7 +223,7 @@ $("#auth-form").onsubmit = async (event) => {
   event.preventDefault();
   const data = formData(event.currentTarget);
   try {
-    const result = await api(signupMode ? "register" : "login", { body: { email: data.email, password: data.password, name: data.name, role: data.role } });
+    const result = await api(signupMode ? "register" : "login", { body: { email: data.email, password: data.password, name: data.name } });
     user = result.user;
     refreshRoleControls();
     authDialog.close();
@@ -344,6 +347,7 @@ $("#contact-form").onsubmit = async (event) => {
   try {
     await api("contact", { body: formData(form) });
     form.reset();
+    if (user) { form.elements.name.value = user.name || ""; form.elements.email.value = user.email || ""; await loadAccount(); }
     showMessage($("#contact-message"), "Your message has been sent. Thank you!");
   } catch (error) { showMessage($("#contact-message"), error.message, true); }
 };
@@ -390,6 +394,15 @@ $("#admin-application-list").onchange = async (event) => {
   const select = event.target.closest("[data-status-kind]");
   if (!select) return;
   await api(`admin/applications/${select.dataset.statusKind}/${select.dataset.statusId}`, { method: "PATCH", body: { status: select.value } });
+};
+
+$("#admin-message-list").onclick = async (event) => {
+  const button = event.target.closest("[data-send-reply]");
+  if (!button) return;
+  const id = button.dataset.sendReply;
+  const reply = $("#admin-message-list").querySelector(`[data-message-reply="${id}"]`).value;
+  await api(`admin/messages/${id}`, { method: "PATCH", body: { reply } });
+  await loadAdminApplications();
 };
 
 // Start the first page requests together: restore login, show volunteer roles,

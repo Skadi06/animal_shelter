@@ -134,7 +134,7 @@ def init_db():
         schema = f"""
         CREATE TABLE IF NOT EXISTS users (
             id {id_type} PRIMARY KEY, email TEXT UNIQUE NOT NULL, password TEXT NOT NULL,
-            role TEXT NOT NULL DEFAULT 'volunteer', name TEXT DEFAULT '', phone TEXT DEFAULT '',
+            role TEXT NOT NULL DEFAULT 'user', name TEXT DEFAULT '', phone TEXT DEFAULT '',
             address TEXT DEFAULT '', experience TEXT DEFAULT '', pets TEXT DEFAULT ''
         );
         CREATE TABLE IF NOT EXISTS animals (
@@ -162,8 +162,9 @@ def init_db():
             id {id_type} PRIMARY KEY, title TEXT NOT NULL, description TEXT DEFAULT '', schedule TEXT DEFAULT ''
         );
         CREATE TABLE IF NOT EXISTS messages (
-            id {id_type} PRIMARY KEY, name TEXT NOT NULL, email TEXT NOT NULL, animal_id INTEGER,
-            message TEXT NOT NULL, created_at TEXT DEFAULT {time_default}
+            id {id_type} PRIMARY KEY, user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+            name TEXT NOT NULL, email TEXT NOT NULL, animal_id INTEGER,
+            message TEXT NOT NULL, reply TEXT DEFAULT '', created_at TEXT DEFAULT {time_default}
         );
         """
         # The schema string contains multiple CREATE TABLE commands. Split it
@@ -171,6 +172,16 @@ def init_db():
         for statement in schema.split(";"):
             if statement.strip():
                 conn.execute(statement)
+        # Upgrade databases created before account-linked questions and the
+        # regular-user role were introduced.
+        user_columns = {row["name"] for row in conn.execute("PRAGMA table_info(users)").fetchall()} if not DATABASE_URL else {row["column_name"] for row in conn.execute("SELECT column_name FROM information_schema.columns WHERE table_name='users'").fetchall()}
+        message_columns = {row["name"] for row in conn.execute("PRAGMA table_info(messages)").fetchall()} if not DATABASE_URL else {row["column_name"] for row in conn.execute("SELECT column_name FROM information_schema.columns WHERE table_name='messages'").fetchall()}
+        if "role" in user_columns:
+            conn.execute("UPDATE users SET role='user' WHERE role='volunteer'")
+        if "user_id" not in message_columns:
+            conn.execute("ALTER TABLE messages ADD COLUMN user_id INTEGER REFERENCES users(id) ON DELETE SET NULL")
+        if "reply" not in message_columns:
+            conn.execute("ALTER TABLE messages ADD COLUMN reply TEXT DEFAULT ''")
         # Add the first four demo records only when there are no animals yet.
         count = conn.execute("SELECT COUNT(*) AS total FROM animals").fetchone()
         if count["total"] == 0:

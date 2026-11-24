@@ -6,7 +6,7 @@ from flask import Blueprint, jsonify, session
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from database import db
-from shelter_helpers import ROLES, current_user, insert_id, json_body, login_required
+from shelter_helpers import current_user, insert_id, json_body, login_required
 
 bp = Blueprint("auth", __name__)
 # The @bp.post/get/patch lines below are decorators: they tell Flask which URL
@@ -16,7 +16,8 @@ bp = Blueprint("auth", __name__)
 def register():
     """Create a new account from the registration form.
 
-    The browser sends an email, password, name, and requested role as JSON.
+    The browser sends an email, password, and name. Public registration always
+    creates a regular user; privileged roles are assigned in the database.
     The password is turned into a one-way hash before it is saved, so the
     database does not store the password text itself. On success, the new
     account is signed in immediately and its public profile is returned.
@@ -24,13 +25,11 @@ def register():
     data = json_body()
     # Normalize email so capitalization and extra spaces do not create separate accounts.
     email, password = data.get("email", "").strip().lower(), data.get("password", "")
-    role = data.get("role", "volunteer")
-    if not email or len(password) < 8 or role not in ROLES:
-        return jsonify(error="Enter an email, a password of at least 8 characters, and a valid role."), 400
+    if not email or len(password) < 8:
+        return jsonify(error="Enter an email and a password of at least 8 characters."), 400
     try:
         with db() as conn:
-            # Hash the password before saving it; then save the chosen role and name.
-            user_id = insert_id(conn, "INSERT INTO users(email,password,role,name) VALUES(?,?,?,?)", (email, generate_password_hash(password), role, data.get("name", "")))
+            user_id = insert_id(conn, "INSERT INTO users(email,password,role,name) VALUES(?,?,?,?)", (email, generate_password_hash(password), "user", data.get("name", "")))
     except Exception as error:
         if isinstance(error, sqlite3.IntegrityError) or "unique" in str(error).lower():
             return jsonify(error="An account with that email already exists."), 409

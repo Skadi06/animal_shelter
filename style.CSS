@@ -815,6 +815,11 @@ a {
   font-size: 13px;
 }
 
+.saved-animal { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid #eee; }
+.saved-animal img { width: 76px; height: 68px; object-fit: cover; border-radius: 10px; }
+.saved-animal div { display: grid; gap: 5px; }
+.saved-animal small { color: #666; }
+
 .application-item small {
   color: #899087;
 }

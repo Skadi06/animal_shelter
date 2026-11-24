@@ -21,7 +21,7 @@ def applications():
         with db() as conn:
             rows = conn.execute(
                 """
-                SELECT a.*, animal.name AS animal_name
+                SELECT a.*, animal.name AS animal_name, animal.status AS adoption_status
                 FROM adoptions a
                 JOIN animals animal ON animal.id = a.animal_id
                 WHERE a.user_id = ?
@@ -94,12 +94,23 @@ def contact():
     The animal ID is optional: an empty selection means the message is general,
     while a selected animal links the question to that animal's database row.
     """
-    data = json_body()
+    data, user = json_body(), current_user()
+    if user:
+        data["name"], data["email"] = user["name"], user["email"]
     if not data.get("name") or not data.get("email") or not data.get("message"):
         return jsonify(error="Please enter your name, email, and message."), 400
     with db() as conn:
-        conn.execute("INSERT INTO messages(name,email,animal_id,message) VALUES(?,?,?,?)", (data["name"], data["email"], data.get("animal_id") or None, data["message"]))
+        conn.execute("INSERT INTO messages(user_id,name,email,animal_id,message) VALUES(?,?,?,?,?)", (user["id"] if user else None, data["name"], data["email"], data.get("animal_id") or None, data["message"]))
     return jsonify(message="Your message has been sent."), 201
+
+
+@bp.get("/api/messages")
+@login_required
+def my_messages():
+    """Return the signed-in user's questions and staff replies."""
+    with db() as conn:
+        rows = conn.execute("SELECT m.*, a.name AS animal_name FROM messages m LEFT JOIN animals a ON a.id=m.animal_id WHERE m.user_id=? ORDER BY m.created_at DESC", (session["user_id"],)).fetchall()
+    return jsonify(messages=[dict(row) for row in rows])
 
 
 

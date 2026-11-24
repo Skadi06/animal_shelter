@@ -50,6 +50,25 @@ def update_application(kind, item_id):
     return jsonify(ok=True)
 
 
+@bp.get("/api/admin/messages")
+@roles_required("staff", "administrator")
+def admin_messages():
+    """Return customer questions for staff to answer."""
+    with db() as conn:
+        rows = conn.execute("SELECT m.*, a.name AS animal_name FROM messages m LEFT JOIN animals a ON a.id=m.animal_id ORDER BY m.created_at DESC").fetchall()
+    return jsonify(messages=[dict(row) for row in rows])
+
+
+@bp.patch("/api/admin/messages/<int:message_id>")
+@roles_required("staff", "administrator")
+def reply_message(message_id):
+    """Save a staff response to a customer question."""
+    reply = json_body().get("reply", "").strip()
+    with db() as conn:
+        conn.execute("UPDATE messages SET reply=? WHERE id=?", (reply, message_id))
+    return jsonify(ok=True)
+
+
 @bp.route("/api/admin/animals", defaults={"animal_id": None}, methods=["POST"])
 @bp.route("/api/admin/animals/<int:animal_id>", methods=["PUT", "DELETE"])
 @roles_required("staff", "administrator")

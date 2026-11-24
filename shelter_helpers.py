@@ -17,7 +17,7 @@ from database import DATABASE_URL, db
 
 # These are the account types the website understands. They are used when a
 # visitor registers and when a route checks whether someone may manage data.
-ROLES = {"volunteer", "staff", "administrator"}
+ROLES = {"user", "staff", "administrator"}
 # Only these animal fields are accepted from the staff edit form. Keeping this
 # list here prevents an incoming form from changing unrelated database columns.
 ANIMAL_FIELDS = (
