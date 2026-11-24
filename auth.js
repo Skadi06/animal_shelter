@@ -125,13 +125,27 @@ async function loadAccount() {
   if (!user) return;
   const profileForm = $("#profile-form");
   for (const key of ["name", "phone", "address", "experience", "pets"]) profileForm.elements[key].value = user[key] || "";
-  const [favorites, applications, messages] = await Promise.all([api("favorites", { method: "GET" }), api("applications", { method: "GET" }), api("messages", { method: "GET" })]);
+  // Keep application tracking independent from favorites and messages: a
+  // failure in an unrelated account panel must not hide submitted applications.
+  try {
+    const { applications } = await api("applications", { method: "GET" });
+    $("#application-list").innerHTML = applications.length ? applications.map((item) => `<article class="application-item"><strong>Application #${item.id} · ${escapeHtml(item.animal_name || "Animal")}</strong><span>Application: ${escapeHtml(item.status)}</span><span>Adoption: ${escapeHtml(item.adoption_status || "Status unavailable")}</span><small>Submitted ${escapeHtml(item.created_at)}</small></article>`).join("") : `<p class="empty-state">Your adoption applications will appear here.</p>`;
+  } catch (error) {
+    $("#application-list").textContent = `Could not load your applications: ${error.message}`;
+  }
+  let favorites = null;
+  try { favorites = await api("favorites", { method: "GET" }); }
+  catch (error) { $("#favorite-list").textContent = `Could not load saved animals: ${error.message}`; }
+  let messages = null;
+  try { messages = await api("messages", { method: "GET" }); }
+  catch (error) { $("#message-list").textContent = `Could not load questions: ${error.message}`; }
   // Keep this set in sync with Supabase-backed records so listing buttons
   // immediately show which animals the current account has saved.
-  savedAnimalIds = new Set(favorites.animals.map((animal) => Number(animal.id)));
-  $("#favorite-list").innerHTML = favorites.animals.length ? favorites.animals.map((animal) => `<article class="saved-animal"><img src="${escapeHtml(animal.photo || "https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=800")}" alt="${escapeHtml(animal.name)}"><div><strong>${escapeHtml(animal.name)}</strong><small>${escapeHtml(animal.breed)} · ${escapeHtml(animal.status)}</small><button data-unfavorite="${animal.id}">Remove</button></div></article>`).join("") : `<p class="empty-state">Save an animal from the listings to see it here.</p>`;
-  $("#application-list").innerHTML = applications.applications.length ? applications.applications.map((item) => `<article class="application-item"><strong>${escapeHtml(item.animal_name)}</strong><span>Application: ${escapeHtml(item.status)}</span><span>Adoption: ${escapeHtml(item.adoption_status)}</span><small>Submitted ${escapeHtml(item.created_at)}</small></article>`).join("") : `<p class="empty-state">Your adoption applications will appear here.</p>`;
-  $("#message-list").innerHTML = messages.messages.length ? messages.messages.map((item) => `<article class="application-item"><strong>${escapeHtml(item.animal_name || "General question")}</strong><p>${escapeHtml(item.message)}</p><span>${item.reply ? `Shelter reply: ${escapeHtml(item.reply)}` : "Waiting for a shelter response"}</span><small>${escapeHtml(item.created_at)}</small></article>`).join("") : `<p class="empty-state">Questions you send while signed in and shelter replies will appear here.</p>`;
+  if (favorites) {
+    savedAnimalIds = new Set(favorites.animals.map((animal) => Number(animal.id)));
+    $("#favorite-list").innerHTML = favorites.animals.length ? favorites.animals.map((animal) => `<article class="saved-animal"><img src="${escapeHtml(animal.photo || "https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=800")}" alt="${escapeHtml(animal.name)}"><div><strong>${escapeHtml(animal.name)}</strong><small>${escapeHtml(animal.breed)} · ${escapeHtml(animal.status)}</small><button data-unfavorite="${animal.id}">Remove</button></div></article>`).join("") : `<p class="empty-state">Save an animal from the listings to see it here.</p>`;
+  }
+  if (messages) $("#message-list").innerHTML = messages.messages.length ? messages.messages.map((item) => `<article class="application-item"><strong>${escapeHtml(item.animal_name || "General question")}</strong><p>${escapeHtml(item.message)}</p><span>${item.reply ? `Shelter reply: ${escapeHtml(item.reply)}` : "Waiting for a shelter response"}</span><small>${escapeHtml(item.created_at)}</small></article>`).join("") : `<p class="empty-state">Questions you send while signed in and shelter replies will appear here.</p>`;
 }
 
 async function loadAdminApplications() {
@@ -143,7 +157,7 @@ async function loadAdminApplications() {
     ...result.adoptions.map((item) => ({ ...item, kind: "adoption", label: `Adoption · ${item.animal_name}`, applicant: item.name })),
     ...result.volunteers.map((item) => ({ ...item, kind: "volunteer", label: "Volunteer application", applicant: item.name }))
   ];
-  $("#admin-application-list").innerHTML = all.length ? all.map((item) => `<article class="application-item"><strong>${escapeHtml(item.label)}</strong><span>${escapeHtml(item.applicant)} · ${escapeHtml(item.email)}</span><select data-status-kind="${item.kind}" data-status-id="${item.id}">${["Submitted", "In Review", "Approved", "Declined"].map((status) => `<option ${status === item.status ? "selected" : ""}>${status}</option>`).join("")}</select><small>${escapeHtml(item.created_at)}</small></article>`).join("") : `<p class="empty-state">No applications have been submitted yet.</p>`;
+  $("#admin-application-list").innerHTML = all.length ? all.map((item) => `<article class="application-item"><strong>#${item.id} · ${escapeHtml(item.label)}</strong><span>${escapeHtml(item.applicant)} · ${escapeHtml(item.email)}</span><select data-status-kind="${item.kind}" data-status-id="${item.id}">${["Submitted", "In Review", "Approved", "Declined"].map((status) => `<option ${status === item.status ? "selected" : ""}>${status}</option>`).join("")}</select><small>Submitted ${escapeHtml(item.created_at)}</small></article>`).join("") : `<p class="empty-state">No applications have been submitted yet.</p>`;
   const { messages } = await api("admin/messages", { method: "GET" });
   $("#admin-message-list").innerHTML = messages.length ? messages.map((item) => `<article class="application-item"><strong>${escapeHtml(item.name)} · ${escapeHtml(item.email)}${item.animal_name ? ` · ${escapeHtml(item.animal_name)}` : ""}</strong><p>${escapeHtml(item.message)}</p><label>Reply<textarea data-message-reply="${item.id}" rows="2">${escapeHtml(item.reply || "")}</textarea></label><button type="button" data-send-reply="${item.id}">Save reply</button><small>${escapeHtml(item.created_at)}</small></article>`).join("") : `<p class="empty-state">No customer questions yet.</p>`;
 }
@@ -195,8 +209,9 @@ $("#login-button").onclick = async () => {
 $("#auth-close").onclick = () => authDialog.close();
 
 // Prevent the link's normal page jump, then display account tools in a dialog.
-$("#account-link").onclick = (event) => {
+$("#account-link").onclick = async (event) => {
   event.preventDefault();
+  await loadAccount();
   $("#account-panel").showModal();
 };
 // Start with a blank animal form whenever staff open the management dialog.
@@ -319,8 +334,8 @@ $("#favorite-list").onclick = async (event) => {
 $("#application-form").onsubmit = async (event) => {
   event.preventDefault();
   try {
-    await api("applications", { body: formData(event.currentTarget) });
-    showMessage($("#application-message"), "Application submitted. You can track it in My Account.");
+    const result = await api("applications", { body: formData(event.currentTarget) });
+    showMessage($("#application-message"), `Application #${result.id} submitted. You can track it in My Account.`);
     await loadAccount();
     setTimeout(() => $("#application-dialog").close(), 900);
   } catch (error) { showMessage($("#application-message"), error.message, true); }

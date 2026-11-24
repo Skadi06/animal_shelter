@@ -23,8 +23,8 @@ def admin_applications():
             """
             SELECT a.*, u.email AS account_email, an.name AS animal_name
             FROM adoptions a
-            JOIN users u ON u.id = a.user_id
-            JOIN animals an ON an.id = a.animal_id
+            LEFT JOIN users u ON u.id = a.user_id
+            LEFT JOIN animals an ON an.id = a.animal_id
             ORDER BY a.created_at DESC
             """
         ).fetchall()

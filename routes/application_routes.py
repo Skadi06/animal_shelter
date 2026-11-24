@@ -23,7 +23,7 @@ def applications():
                 """
                 SELECT a.*, animal.name AS animal_name, animal.status AS adoption_status
                 FROM adoptions a
-                JOIN animals animal ON animal.id = a.animal_id
+                LEFT JOIN animals animal ON animal.id = a.animal_id
                 WHERE a.user_id = ?
                 ORDER BY a.created_at DESC
                 """,
