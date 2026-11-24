@@ -75,6 +75,13 @@ function refreshRoleControls() {
   $("#admin-panel").hidden = !canManage;
   $("#admin-link").hidden = !canManage;
   $("#animal-form").hidden = !user || !["staff", "administrator"].includes(user.role);
+  $("#volunteer-form").hidden = !user;
+  $("#volunteer-signin").hidden = !!user;
+  if (user) {
+    $("#volunteer-form").elements.name.value = user.name || "";
+    $("#volunteer-form").elements.email.value = user.email || "";
+    $("#volunteer-form").elements.phone.value = user.phone || "";
+  }
 }
 
 function animalCard(animal) {
@@ -128,8 +135,12 @@ async function loadAccount() {
   // Keep application tracking independent from favorites and messages: a
   // failure in an unrelated account panel must not hide submitted applications.
   try {
-    const { applications } = await api("applications", { method: "GET" });
-    $("#application-list").innerHTML = applications.length ? applications.map((item) => `<article class="application-item"><strong>Application #${item.id} · ${escapeHtml(item.animal_name || "Animal")}</strong><span>Application: ${escapeHtml(item.status)}</span><span>Adoption: ${escapeHtml(item.adoption_status || "Status unavailable")}</span><small>Submitted ${escapeHtml(item.created_at)}</small></article>`).join("") : `<p class="empty-state">Your adoption applications will appear here.</p>`;
+    const result = await api("applications", { method: "GET" });
+    const tracked = [
+      ...(result.applications || []).map((item) => ({ ...item, kind: "Adoption", subject: item.animal_name || "Animal" })),
+      ...(result.volunteer_applications || []).map((item) => ({ ...item, kind: "Volunteer", subject: "Volunteer application" }))
+    ];
+    $("#application-list").innerHTML = tracked.length ? tracked.map((item) => `<article class="application-item"><strong>${item.kind} application #${item.id} · ${escapeHtml(item.subject)}</strong><span>Review status: ${escapeHtml(item.status)}</span>${item.adoption_status ? `<span>Animal status: ${escapeHtml(item.adoption_status)}</span>` : ""}<small>Submitted ${escapeHtml(item.created_at)}</small></article>`).join("") : `<p class="empty-state">Your adoption and volunteer applications will appear here.</p>`;
   } catch (error) {
     $("#application-list").textContent = `Could not load your applications: ${error.message}`;
   }
@@ -352,17 +363,20 @@ $("#profile-form").onsubmit = async (event) => {
   } catch (error) { showMessage($("#profile-message"), error.message, true); }
 };
 
-// Visitors can apply to volunteer without an account. Clear their answers only
-// after the backend confirms the application was saved successfully.
+// Submit a volunteer application for the signed-in account and refresh its
+// status in My Account after the server confirms it was saved.
 $("#volunteer-form").onsubmit = async (event) => {
   event.preventDefault();
   const form = event.currentTarget;
+  if (!user) { $("#login-button").click(); return; }
   try {
-    await api("volunteers", { body: formData(form) });
-    form.reset();
-    showMessage($("#volunteer-message"), "Volunteer application submitted. Thank you!");
+    const result = await api("volunteers", { body: formData(form) });
+    showMessage($("#volunteer-message"), `Volunteer application #${result.id} submitted.`);
+    await loadAccount();
   } catch (error) { showMessage($("#volunteer-message"), error.message, true); }
 };
+
+$("#volunteer-login").onclick = () => $("#login-button").click();
 
 // Save the contact message, optionally connected to one animal. Leave the
 // visitor's text in place if the request fails so they do not retype it.

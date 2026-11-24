@@ -122,7 +122,7 @@
           <div id="favorite-list"></div>
         </div>
         <div class="form-card">
-          <h3>Adoption applications</h3>
+          <h3>My applications</h3>
           <div id="application-list"></div>
         </div>
         <div class="form-card">
@@ -162,7 +162,12 @@
       <h2>Volunteer and <span>help.</span></h2>
       <p>Explore current opportunities and submit a volunteer application.</p>
       <div class="help-grid" id="opportunity-grid"></div>
-      <form id="volunteer-form" class="form-card volunteer-form">
+      <div class="form-card" id="volunteer-signin" hidden>
+        <h3>Sign in to apply</h3>
+        <p>Create an account or sign in to submit and track a volunteer application.</p>
+        <button type="button" class="primary-button" id="volunteer-login">Log in or create an account</button>
+      </div>
+      <form id="volunteer-form" class="form-card volunteer-form" hidden>
         <h3>Volunteer application</h3>
         <div class="form-row">
           <label>Name<input name="name" required></label>

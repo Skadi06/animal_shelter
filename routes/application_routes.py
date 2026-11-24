@@ -29,7 +29,14 @@ def applications():
                 """,
                 (session["user_id"],),
             ).fetchall()
-        return jsonify(applications=[dict(row) for row in rows])
+            volunteer_rows = conn.execute(
+                "SELECT * FROM volunteer_applications WHERE user_id=? ORDER BY created_at DESC",
+                (session["user_id"],),
+            ).fetchall()
+        return jsonify(
+            applications=[dict(row) for row in rows],
+            volunteer_applications=[dict(row) for row in volunteer_rows],
+        )
     data, user = json_body(), current_user()
     required = ("animal_id", "name", "email", "phone", "housing", "experience")
     if any(not data.get(field) for field in required):
@@ -60,16 +67,16 @@ def opportunities():
 
 
 @bp.post("/api/volunteers")
+@login_required
 def volunteer_apply():
-    """Save a visitor's volunteer form as an application for staff to review.
+    """Save a signed-in user's volunteer application for staff to review.
 
-    Visitors may apply without signing in, so ``user_id`` is empty for them.
-    If a visitor is signed in, their account ID is attached to the application.
-    Name, email, and availability must be present before a row is saved.
+    Contact identity and user ID come from the authenticated account, so every
+    submission is linked to the account that can track its status.
     """
     data, user = json_body(), current_user()
-    if not data.get("name") or not data.get("email") or not data.get("availability"):
-        return jsonify(error="Name, email, and availability are required."), 400
+    if not data.get("availability"):
+        return jsonify(error="Please enter your availability."), 400
     with db() as conn:
         item_id = insert_id(
             conn,
@@ -79,8 +86,8 @@ def volunteer_apply():
             VALUES (?, ?, ?, ?, ?, ?, ?)
             """,
             (
-                user["id"] if user else None, data["name"], data["email"],
-                data.get("phone", ""), data.get("interests", ""),
+                user["id"], user["name"], user["email"],
+                user.get("phone", ""), data.get("interests", ""),
                 data.get("availability", ""), data.get("experience", ""),
             ),
         )
