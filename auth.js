@@ -20,7 +20,11 @@ let signupMode = false;
 const escapeHtml = (value = "") => String(value).replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char]));
 // Read named inputs from a form and return a simple object such as
 // { email: "...", password: "..." } that the API helper can send as JSON.
-const formData = (form) => Object.fromEntries(new FormData(form).entries());
+const formData = (form) => Object.fromEntries(
+  Array.from(form.elements)
+    .filter((field) => field.name && !field.disabled && field.type !== "file")
+    .map((field) => [field.name, field.value])
+);
 
 // All browser-to-backend requests go through this helper. It chooses GET or
 // POST when a method is not supplied, sends regular objects as JSON, and sends
@@ -77,10 +81,14 @@ function refreshRoleControls() {
   $("#animal-form").hidden = !user || !["staff", "administrator"].includes(user.role);
   $("#volunteer-form").hidden = !user;
   $("#volunteer-signin").hidden = !!user;
+  $("#contact-message-form").hidden = !user;
+  $("#contact-signin").hidden = !!user;
   if (user) {
     $("#volunteer-form").elements.name.value = user.name || "";
     $("#volunteer-form").elements.email.value = user.email || "";
     $("#volunteer-form").elements.phone.value = user.phone || "";
+    $("#contact-message-form").elements.name.value = user.name || "";
+    $("#contact-message-form").elements.email.value = user.email || "";
   }
 }
 
@@ -102,7 +110,7 @@ async function loadAnimals(page = animalPage) {
   // Read the filter fields, request one results page from Flask, then redraw
   // the animal cards and page buttons. Flask limits each page to 12 animals,
   // so a large shelter list does not become one very long page.
-  const filters = new URLSearchParams(new FormData($("#animal-filters")));
+  const filters = new URLSearchParams(formData($("#animal-filters")));
   filters.set("page", page);
   const data = await api(`animals?${filters.toString()}`, { method: "GET" });
   animals = data.animals;
@@ -189,8 +197,8 @@ async function loadUser() {
   user = data.user;
   refreshRoleControls();
   if (user) {
-    $("#contact-form").elements.name.value = user.name || "";
-    $("#contact-form").elements.email.value = user.email || "";
+    $("#contact-message-form").elements.name.value = user.name || "";
+    $("#contact-message-form").elements.email.value = user.email || "";
     await loadAccount();
     await loadAdminApplications();
   }
@@ -377,16 +385,26 @@ $("#volunteer-form").onsubmit = async (event) => {
 };
 
 $("#volunteer-login").onclick = () => $("#login-button").click();
+$("#contact-login").onclick = () => $("#login-button").click();
 
 // Save the contact message, optionally connected to one animal. Leave the
 // visitor's text in place if the request fails so they do not retype it.
-$("#contact-form").onsubmit = async (event) => {
+$("#contact-message-form").onsubmit = async (event) => {
   event.preventDefault();
   const form = event.currentTarget;
+  if (!user) { $("#login-button").click(); return; }
   try {
-    await api("contact", { body: formData(form) });
+    const payload = {
+      name: form.elements.name.value,
+      email: form.elements.email.value,
+      animal_id: form.elements.animal_id.value,
+      message: form.elements.message.value
+    };
+    await api("contact", { body: payload });
     form.reset();
-    if (user) { form.elements.name.value = user.name || ""; form.elements.email.value = user.email || ""; await loadAccount(); }
+    form.elements.name.value = user.name || "";
+    form.elements.email.value = user.email || "";
+    await loadAccount();
     showMessage($("#contact-message"), "Your message has been sent. Thank you!");
   } catch (error) { showMessage($("#contact-message"), error.message, true); }
 };
@@ -414,6 +432,7 @@ $("#animal-grid").addEventListener("click", async (event) => {
 $("#animal-form").onsubmit = async (event) => {
   event.preventDefault();
   const form = event.currentTarget;
+  if (!(form instanceof HTMLFormElement)) throw new TypeError("Animal editor form was not found.");
   const data = new FormData(form);
   const id = data.get("id");
   data.delete("id");
@@ -447,3 +466,4 @@ $("#admin-message-list").onclick = async (event) => {
 // Start the first page requests together: restore login, show volunteer roles,
 // and fill the contact dropdown. Log startup errors for troubleshooting.
 Promise.all([loadUser(), loadOpportunities(), loadAnimalOptions()]).catch((error) => console.error(error));
+

@@ -262,10 +262,15 @@
           <a href="https://facebook.com" target="_blank" rel="noreferrer">Facebook</a>.
         </p>
       </div>
-      <form id="contact-form" class="form-card">
+      <div class="form-card" id="contact-signin">
+        <h3>Sign in to send a message</h3>
+        <p>Create an account or sign in so you can follow the shelter’s reply in My Account.</p>
+        <button type="button" class="primary-button" id="contact-login">Log in or create an account</button>
+      </div>
+      <form id="contact-message-form" class="form-card" hidden>
         <div class="form-row">
-          <label>Name<input name="name" required></label>
-          <label>Email<input name="email" type="email" required></label>
+          <label>Name<input name="name" readonly required></label>
+          <label>Email<input name="email" type="email" readonly required></label>
         </div>
         <label>Animal (optional)
           <select name="animal_id" id="contact-animal">

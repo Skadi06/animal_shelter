@@ -95,17 +95,17 @@ def volunteer_apply():
 
 
 @bp.post("/api/contact")
+@login_required
 def contact():
-    """Save a message from the contact form for the shelter to follow up on.
+    """Save a signed-in user's question for the shelter to follow up on.
 
     The animal ID is optional: an empty selection means the message is general,
     while a selected animal links the question to that animal's database row.
     """
     data, user = json_body(), current_user()
-    if user:
-        data["name"], data["email"] = user["name"], user["email"]
-    if not data.get("name") or not data.get("email") or not data.get("message"):
-        return jsonify(error="Please enter your name, email, and message."), 400
+    if not data.get("message"):
+        return jsonify(error="Please enter a message."), 400
+    data["name"], data["email"] = user["name"], user["email"]
     with db() as conn:
         conn.execute("INSERT INTO messages(user_id,name,email,animal_id,message) VALUES(?,?,?,?,?)", (user["id"] if user else None, data["name"], data["email"], data.get("animal_id") or None, data["message"]))
     return jsonify(message="Your message has been sent."), 201
