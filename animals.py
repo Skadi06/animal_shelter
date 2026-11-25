@@ -24,8 +24,11 @@ def list_animals():
                 conditions.append("(LOWER(name) LIKE LOWER(?) OR LOWER(breed) LIKE LOWER(?) OR LOWER(description) LIKE LOWER(?))")
                 values.extend([f"%{value}%"] * 3)
             elif key == "age":
-                conditions.append("LOWER(age) LIKE LOWER(?)")
-                values.append(f"%{value}%")
+                if value == "10+":
+                    conditions.append("age ~ '(^|[^0-9])([1-9][0-9]+|10)([^0-9]|$)'")
+                else:
+                    conditions.append("age ~ ?")
+                    values.append(f"(^|[^0-9]){value}([^0-9]|$)")
             elif key == "gender":
                 conditions.append("LOWER(gender) = LOWER(?)")
                 values.append(value)
