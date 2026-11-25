@@ -1,23 +1,23 @@
-"""Registration, login, session, and profile API routes."""
+# Registration, login, session, and profile API routes.
 
 from flask import Blueprint, jsonify, session
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from database import db
-from shelter_helpers import current_user, insert_id, json_body, login_required
+from helpers import current_user, insert_id, json_body, login_required
 
 bp = Blueprint("auth", __name__)
 
 @bp.post("/api/register")
 def register():
-    """Create a new account from the registration form.
-
-    The browser sends an email, password, and name. Public registration always
-    creates a regular user; privileged roles are assigned in the database.
-    The password is turned into a one-way hash before it is saved, so the
-    database does not store the password text itself. On success, the new
-    account is signed in immediately and its public profile is returned.
-    """
+    # Create a new account from the registration form.
+    #
+    # The browser sends an email, password, and name. Public registration always
+    # creates a regular user; privileged roles are assigned in the database.
+    # The password is turned into a one-way hash before it is saved, so the
+    # database does not store the password text itself. On success, the new
+    # account is signed in immediately and its public profile is returned.
+    #
     data = json_body()
     email, password = data.get("email", "").strip().lower(), data.get("password", "")
     if not email or len(password) < 8:
@@ -34,12 +34,12 @@ def register():
 
 @bp.post("/api/login")
 def login():
-    """Sign in an existing account using the submitted email and password.
-
-    The email is normalized just like it is during registration. The stored
-    password hash is checked against the submitted password; when it matches,
-    the account ID is put in the browser session for later requests.
-    """
+    # Sign in an existing account using the submitted email and password.
+    #
+    # The email is normalized just like it is during registration. The stored
+    # password hash is checked against the submitted password; when it matches,
+    # the account ID is put in the browser session for later requests.
+    #
     data = json_body()
     with db() as conn:
         user = conn.execute("SELECT * FROM users WHERE email=?", (data.get("email", "").strip().lower(),)).fetchone()
@@ -50,24 +50,24 @@ def login():
 
 @bp.post("/api/logout")
 def logout():
-    """Forget which account is signed in by clearing the session cookie data."""
+    # Forget which account is signed in by clearing the session cookie data.
     session.clear()
     return jsonify(ok=True)
 
 @bp.get("/api/me")
 def me():
-    """Let the browser check whether this visitor has an active login session."""
+    # Let the browser check whether this visitor has an active login session.
     return jsonify(user=current_user())
 
 @bp.patch("/api/profile")
 @login_required
 def update_profile():
-    """Save changes to the signed-in user's personal profile.
-
-    The login decorator runs before this function. Only the listed profile
-    fields are accepted; email, password, role, and account ID cannot be
-    changed through this route. If no field was sent, nothing is updated.
-    """
+    # Save changes to the signed-in user's personal profile.
+    #
+    # The login decorator runs before this function. Only the listed profile
+    # fields are accepted; email, password, role, and account ID cannot be
+    # changed through this route. If no field was sent, nothing is updated.
+    #
     data = json_body()
     allowed = ("name", "phone", "address", "experience", "pets")
     fields = {key: data[key] for key in allowed if key in data}

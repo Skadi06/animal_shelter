@@ -1,25 +1,24 @@
-"""PostgreSQL connection and shelter schema setup.
-
-This module keeps database setup separate from Flask route handlers. It requires
-PostgreSQL through DATABASE_URL or POSTGRES_URL; SQLite is not supported.
-"""
+# PostgreSQL connection and shelter schema setup.
+#
+# This module keeps database setup separate from Flask route handlers. It requires
+# PostgreSQL through DATABASE_URL or POSTGRES_URL; SQLite is not supported.
 
 import os
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 DATABASE_URL = os.environ.get("DATABASE_URL") or os.environ.get("POSTGRES_URL")
 
 class Database:
-    """Provide a PostgreSQL connection with dictionary-style result rows.
-
-    The website uses the configured PostgreSQL database.
-    """
+    # Provide a PostgreSQL connection with dictionary-style result rows.
+    #
+    # The website uses the configured PostgreSQL database.
+    #
     def __init__(self):
-        """Open a connection and make database rows easy to read by column name.
-
-        Supabase's URL may include options for another database driver, so only
-        options Psycopg understands are kept. ``prepare_threshold=None`` avoids
-        prepared statements, which the Supabase transaction pooler does not use.
-        """
+        # Open a connection and make database rows easy to read by column name.
+        #
+        # Supabase's URL may include options for another database driver, so only
+        # options Psycopg understands are kept. ``prepare_threshold=None`` avoids
+        # prepared statements, which the Supabase transaction pooler does not use.
+        #
         if not DATABASE_URL:
             raise RuntimeError(
                 "PostgreSQL is required. Configure DATABASE_URL or POSTGRES_URL."
@@ -45,41 +44,41 @@ class Database:
             prepare_threshold=None,
         )
     def __enter__(self):
-        """Return this connection wrapper when Python enters a ``with db()`` block.
-
-        This lets routes write ``with db() as conn`` and know the connection
-        will be finalized when the indented block finishes.
-        """
+        # Return this connection wrapper when Python enters a ``with db()`` block.
+        #
+        # This lets routes write ``with db() as conn`` and know the connection
+        # will be finalized when the indented block finishes.
+        #
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
-        """Commit a successful block, roll back a failed one, and close the DB.
-
-        Python calls this automatically after a ``with`` block. The original
-        exception details are passed to the database driver so it can decide
-        whether the transaction should commit or roll back. The connection is
-        closed in ``finally`` even if finishing the transaction raises an error.
-        """
+        # Commit a successful block, roll back a failed one, and close the DB.
+        #
+        # Python calls this automatically after a ``with`` block. The original
+        # exception details are passed to the database driver so it can decide
+        # whether the transaction should commit or roll back. The connection is
+        # closed in ``finally`` even if finishing the transaction raises an error.
+        #
         try:
             return self.connection.__exit__(exc_type, exc_value, traceback)
         finally:
             self.connection.close()
 
     def execute(self, sql, values=()):
-        """Run one SQL command with values supplied separately from the command.
-
-        Routes use ``?`` placeholders; this method changes those placeholders
-        to Psycopg's ``%s`` format and maps favorite inserts to PostgreSQL
-        conflict handling.
-        """
+        # Run one SQL command with values supplied separately from the command.
+        #
+        # Routes use ``?`` placeholders; this method changes those placeholders
+        # to Psycopg's ``%s`` format and maps favorite inserts to PostgreSQL
+        # conflict handling.
+        #
         return self.connection.execute(sql.replace("?", "%s"), values)
 
 def db():
-    """Create a fresh database connection wrapper for one route operation."""
+    # Create a fresh database connection wrapper for one route operation.
     return Database()
 
 def init_db():
-    """Create or upgrade the PostgreSQL tables the shelter website needs."""
+    # Create or upgrade the PostgreSQL tables the shelter website needs.
     with db() as conn:
         schema = """
         CREATE TABLE IF NOT EXISTS users (

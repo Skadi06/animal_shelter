@@ -1,21 +1,21 @@
-"""Staff-only routes for reviewing applications and managing animals."""
+# Staff-only routes for reviewing applications and managing animals.
 
 from flask import Blueprint, jsonify, request
 
 from database import db
-from shelter_helpers import clean_animal, insert_id, json_body, roles_required, upload_animal_photo
+from helpers import clean_animal, insert_id, json_body, roles_required, upload_animal_photo
 
 bp = Blueprint("admin", __name__)
 
 @bp.get("/api/admin/applications")
 @roles_required("staff", "administrator")
 def admin_applications():
-    """Give shelter staff the adoption and volunteer queues to review.
-
-    The role decorator blocks visitors and volunteers. Adoption rows are joined
-    with account and animal tables so staff see the applicant and animal names;
-    volunteer rows already contain the contact details staff need.
-    """
+    # Give shelter staff the adoption and volunteer queues to review.
+    #
+    # The role decorator blocks visitors and volunteers. Adoption rows are joined
+    # with account and animal tables so staff see the applicant and animal names;
+    # volunteer rows already contain the contact details staff need.
+    #
     with db() as conn:
         adoptions = conn.execute(
             """
@@ -32,12 +32,12 @@ def admin_applications():
 @bp.patch("/api/admin/applications/<kind>/<int:item_id>")
 @roles_required("staff", "administrator")
 def update_application(kind, item_id):
-    """Save a staff member's new status for one application.
-
-    ``kind`` selects the adoption or volunteer table, and ``item_id`` identifies
-    the row. Only the four status choices shown in the admin interface are
-    accepted, preventing arbitrary table names or status values from being used.
-    """
+    # Save a staff member's new status for one application.
+    #
+    # ``kind`` selects the adoption or volunteer table, and ``item_id`` identifies
+    # the row. Only the four status choices shown in the admin interface are
+    # accepted, preventing arbitrary table names or status values from being used.
+    #
     table = {"adoption": "adoptions", "volunteer": "volunteer_applications"}.get(kind)
     status = json_body().get("status")
     valid_statuses = {"In Review", "Approved", "Declined"} if kind == "adoption" else {"Submitted", "In Review", "Approved", "Declined"}
@@ -78,7 +78,7 @@ def update_application(kind, item_id):
 @bp.get("/api/admin/messages")
 @roles_required("staff", "administrator")
 def admin_messages():
-    """Return customer questions for staff to answer."""
+    # Return customer questions for staff to answer.
     with db() as conn:
         rows = conn.execute("SELECT m.*, a.name AS animal_name FROM messages m LEFT JOIN animals a ON a.id=m.animal_id ORDER BY m.created_at DESC").fetchall()
     return jsonify(messages=[dict(row) for row in rows])
@@ -86,7 +86,7 @@ def admin_messages():
 @bp.patch("/api/admin/messages/<int:message_id>")
 @roles_required("staff", "administrator")
 def reply_message(message_id):
-    """Save a staff response to a customer question."""
+    # Save a staff response to a customer question.
     reply = json_body().get("reply", "").strip()
     with db() as conn:
         conn.execute("UPDATE messages SET reply=? WHERE id=?", (reply, message_id))
@@ -96,13 +96,13 @@ def reply_message(message_id):
 @bp.route("/api/admin/animals/<int:animal_id>", methods=["PUT", "DELETE"])
 @roles_required("staff", "administrator")
 def manage_animal(animal_id):
-    """Create, change, or delete an animal profile for shelter staff.
-
-    POST creates a new animal, PUT changes an existing animal, and DELETE
-    removes it. Create/edit forms use multipart data so a photo can be uploaded.
-    If an edit does not include a replacement photo, the current photo stays.
-    The role decorator permits only staff and administrator accounts.
-    """
+    # Create, change, or delete an animal profile for shelter staff.
+    #
+    # POST creates a new animal, PUT changes an existing animal, and DELETE
+    # removes it. Create/edit forms use multipart data so a photo can be uploaded.
+    # If an edit does not include a replacement photo, the current photo stays.
+    # The role decorator permits only staff and administrator accounts.
+    #
     with db() as conn:
         if request.method == "DELETE":
             conn.execute("DELETE FROM animals WHERE id=?", (animal_id,))

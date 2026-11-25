@@ -1,21 +1,21 @@
-"""Adoption, volunteer, and contact API routes."""
+# Adoption, volunteer, and contact API routes.
 
 from flask import Blueprint, jsonify, request, session
 
 from database import db
-from shelter_helpers import current_user, insert_id, json_body, login_required
+from helpers import current_user, insert_id, json_body, login_required
 
 bp = Blueprint("applications", __name__)
 
 @bp.route("/api/applications", methods=["GET", "POST"])
 @login_required
 def applications():
-    """Show this account's adoption applications or submit a new one.
-
-    GET loads the signed-in account's application history for My Account. POST
-    reads the form fields, checks the required answers, saves a new application,
-    and returns its ID and initial In Review status to the browser.
-    """
+    # Show this account's adoption applications or submit a new one.
+    #
+    # GET loads the signed-in account's application history for My Account. POST
+    # reads the form fields, checks the required answers, saves a new application,
+    # and returns its ID and initial In Review status to the browser.
+    #
     if request.method == "GET":
         with db() as conn:
             rows = conn.execute(
@@ -70,7 +70,7 @@ def applications():
 
 @bp.get("/api/opportunities")
 def opportunities():
-    """Return the volunteer roles and schedules displayed on the Help section."""
+    # Return the volunteer roles and schedules displayed on the Help section.
     with db() as conn:
         rows = conn.execute("SELECT * FROM opportunities ORDER BY id").fetchall()
     return jsonify(opportunities=[dict(row) for row in rows])
@@ -78,11 +78,11 @@ def opportunities():
 @bp.post("/api/volunteers")
 @login_required
 def volunteer_apply():
-    """Save a signed-in user's volunteer application for staff to review.
-
-    Contact identity and user ID come from the authenticated account, so every
-    submission is linked to the account that can track its status.
-    """
+    # Save a signed-in user's volunteer application for staff to review.
+    #
+    # Contact identity and user ID come from the authenticated account, so every
+    # submission is linked to the account that can track its status.
+    #
     data, user = json_body(), current_user()
     if not data.get("availability"):
         return jsonify(error="Please enter your availability."), 400
@@ -105,11 +105,11 @@ def volunteer_apply():
 @bp.post("/api/contact")
 @login_required
 def contact():
-    """Save a signed-in user's question for the shelter to follow up on.
-
-    The animal ID is optional: an empty selection means the message is general,
-    while a selected animal links the question to that animal's database row.
-    """
+    # Save a signed-in user's question for the shelter to follow up on.
+    #
+    # The animal ID is optional: an empty selection means the message is general,
+    # while a selected animal links the question to that animal's database row.
+    #
     data, user = json_body(), current_user()
     if not data.get("message"):
         return jsonify(error="Please enter a message."), 400
@@ -121,7 +121,7 @@ def contact():
 @bp.get("/api/messages")
 @login_required
 def my_messages():
-    """Return the signed-in user's questions and staff replies."""
+    # Return the signed-in user's questions and staff replies.
     with db() as conn:
         rows = conn.execute("SELECT m.*, a.name AS animal_name FROM messages m LEFT JOIN animals a ON a.id=m.animal_id WHERE m.user_id=? ORDER BY m.created_at DESC", (session["user_id"],)).fetchall()
     return jsonify(messages=[dict(row) for row in rows])
