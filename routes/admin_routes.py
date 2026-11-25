@@ -48,13 +48,15 @@ def update_application(kind, item_id):
         return jsonify(error="Invalid application type or status."), 400
     with db() as conn:
         animal_id = None
+        previous_status = None
         if kind == "adoption":
             adoption = conn.execute(
-                "SELECT animal_id FROM adoptions WHERE id=?", (item_id,)
+                "SELECT animal_id, status FROM adoptions WHERE id=?", (item_id,)
             ).fetchone()
             if not adoption:
                 return jsonify(error="Adoption application not found."), 404
             animal_id = adoption["animal_id"]
+            previous_status = adoption["status"]
         conn.execute(f"UPDATE {table} SET status=? WHERE id=?", (status, item_id))
         animal_status = {"In Review": "Pending", "Approved": "Adopted"}.get(status)
         if animal_id and animal_status:
@@ -62,7 +64,7 @@ def update_application(kind, item_id):
                 "UPDATE animals SET status=? WHERE id=?",
                 (animal_status, animal_id),
             )
-        elif animal_id and status == "Declined":
+        elif animal_id and status == "Declined" and previous_status in {"In Review", "Approved"}:
             other_active_application = conn.execute(
                 """SELECT 1 FROM adoptions
                    WHERE animal_id=? AND id<>? AND status IN ('In Review', 'Approved')
@@ -71,7 +73,7 @@ def update_application(kind, item_id):
             ).fetchone()
             if not other_active_application:
                 conn.execute(
-                    "UPDATE animals SET status='Available' WHERE id=? AND status='Pending'",
+                    "UPDATE animals SET status='Available' WHERE id=? AND status IN ('Pending', 'Adopted')",
                     (animal_id,),
                 )
     return jsonify(ok=True)
