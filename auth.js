@@ -334,6 +334,8 @@ $("#animal-grid").onclick = async (event) => {
     applicationForm.elements.name.value = user.name || "";
     applicationForm.elements.email.value = user.email;
     applicationForm.elements.phone.value = user.phone || "";
+    applicationForm.elements.other_pets.value = user.pets || "";
+    applicationForm.elements.experience.value = user.experience || "";
     $("#application-dialog").showModal();
   }
 };
