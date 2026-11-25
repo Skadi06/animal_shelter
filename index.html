@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="style.CSS">
 </head>
 <body>
-  <!-- HEADER: links jump to page sections; JavaScript shows account tools by role. -->
+
   <header class="navbar">
     <a href="#home" class="logo">🐾 Happy Tails</a>
     <nav aria-label="Main navigation">
@@ -25,9 +25,8 @@
     </div>
   </header>
 
-  <!-- MAIN CONTENT: each section is a page area that navigation links can target. -->
-  <main>
-    <!-- Welcome message and the two main actions for a visitor. -->
+<main>
+
     <section class="hero" id="home">
       <div class="hero-content">
         <span class="eyebrow">WELCOME TO HAPPY TAILS</span>
@@ -51,17 +50,14 @@
       </div>
     </section>
 
-    <!-- Small impact numbers shown below the welcome section. -->
-    <section class="stats">
+<section class="stats">
       <div><h2>120+</h2><p>Animals Rescued</p></div>
       <div><h2>85+</h2><p>Happy Adoptions</p></div>
       <div><h2>30+</h2><p>Volunteers</p></div>
       <div><h2>100%</h2><p>Made with Love</p></div>
     </section>
 
-    <!-- Animal search: input names are sent to Flask as filters. The empty results
-         containers are filled by auth.js after it receives data from the backend. -->
-    <section class="section" id="animals">
+<section class="section" id="animals">
       <div class="section-heading">
         <span class="eyebrow">MEET YOUR NEW FRIEND</span>
         <h2>Waiting for a <span>forever home.</span></h2>
@@ -101,8 +97,7 @@
       <nav class="animal-pagination" id="animal-pagination" aria-label="Animal listing pages"></nav>
     </section>
 
-    <!-- My Account is a dialog. JavaScript fills in the saved animals and applications. -->
-    <dialog class="account-panel section" id="account-panel" aria-labelledby="account-title">
+<dialog class="account-panel section" id="account-panel" aria-labelledby="account-title">
       <button type="button" class="auth-close" data-close-dialog="account-panel" aria-label="Close account">&times;</button>
       <span class="eyebrow">YOUR ACCOUNT</span>
       <h2 id="account-title">Profile and activity</h2>
@@ -132,8 +127,7 @@
       </div>
     </dialog>
 
-    <!-- Short description of the shelter's mission and care. -->
-    <section class="about section" id="about">
+<section class="about section" id="about">
       <div class="about-image">
         <img src="https://images.unsplash.com/photo-1450778869180-41d0601e046e?w=1000" alt="Dog receiving care">
       </div>
@@ -156,8 +150,7 @@
       </div>
     </section>
 
-    <!-- Volunteer opportunities are loaded into opportunity-grid by auth.js. -->
-    <section class="help section" id="help">
+<section class="help section" id="help">
       <span class="eyebrow">MAKE A DIFFERENCE</span>
       <h2>Volunteer and <span>help.</span></h2>
       <p>Explore current opportunities and submit a volunteer application.</p>
@@ -182,8 +175,7 @@
       </form>
     </section>
 
-    <!-- Staff-only dashboard for animal editing and reviewing applications. -->
-    <dialog class="admin-panel section" id="admin-panel" aria-labelledby="admin-title">
+<dialog class="admin-panel section" id="admin-panel" aria-labelledby="admin-title">
       <button type="button" class="auth-close" data-close-dialog="admin-panel" aria-label="Close admin panel">&times;</button>
       <span class="eyebrow">SHELTER STAFF</span>
       <h2 id="admin-title">Management dashboard</h2>
@@ -233,8 +225,7 @@
       </div>
     </dialog>
 
-    <!-- Contact call-to-action banner that leads to the form below. -->
-    <section class="contact" id="contact">
+<section class="contact" id="contact">
       <div>
         <span class="eyebrow">YOUR NEW FRIEND IS WAITING</span>
         <h2>Be the reason someone gets a second chance.</h2>
@@ -244,8 +235,7 @@
       <div class="contact-paw">🐾</div>
     </section>
 
-    <!-- Contact details and visitor message form. -->
-    <section class="contact-form-section section" id="contact-form">
+<section class="contact-form-section section" id="contact-form">
       <div class="section-heading">
         <span class="eyebrow">GET IN TOUCH</span>
         <h2>We'd love to hear from you.</h2>
@@ -284,16 +274,13 @@
     </section>
   </main>
 
-  <!-- Footer content appears at the bottom of every page view. -->
-  <footer class="footer">
+<footer class="footer">
     <a href="#home" class="logo">🐾 Happy Tails</a>
     <p>Giving every animal a chance to be loved.</p>
     <span>© 2026 Happy Tails Animal Shelter.</span>
   </footer>
 
-  <!-- Login/register dialog. auth.js shows the extra name and role fields only
-       when the visitor switches from login mode to registration mode. -->
-  <dialog class="auth-dialog" id="auth-dialog" aria-labelledby="auth-title">
+<dialog class="auth-dialog" id="auth-dialog" aria-labelledby="auth-title">
     <button type="button" class="auth-close" id="auth-close" aria-label="Close">&times;</button>
     <span class="eyebrow">HAPPY TAILS ACCOUNT</span>
     <h2 id="auth-title">Welcome back</h2>
@@ -310,14 +297,12 @@
     <button type="button" class="auth-switch" id="auth-switch">Create an account</button>
   </dialog>
 
-  <!-- auth.js inserts the selected animal's full profile into this dialog. -->
-  <dialog class="detail-dialog" id="detail-dialog">
+<dialog class="detail-dialog" id="detail-dialog">
     <button type="button" class="auth-close" id="detail-close" aria-label="Close">&times;</button>
     <div id="animal-detail"></div>
   </dialog>
 
-  <!-- The adoption form is prefilled with the selected animal and account details. -->
-  <dialog class="application-dialog" id="application-dialog">
+<dialog class="application-dialog" id="application-dialog">
     <button type="button" class="auth-close" id="application-close" aria-label="Close">&times;</button>
     <h2>Adoption application</h2>
     <p id="application-animal"></p>
@@ -334,7 +319,6 @@
     </form>
   </dialog>
 
-  <!-- Load the browser code after all page elements exist so its selectors work. -->
-  <script src="auth.js"></script>
+<script src="auth.js"></script>
 </body>
 </html>

@@ -6,8 +6,6 @@ from database import db
 from shelter_helpers import login_required
 
 bp = Blueprint("animals", __name__)
-# The decorators below connect animal URLs to functions in this module.
-# For example, @bp.get means the function answers a browser GET request.
 
 @bp.get("/api/animals")
 def list_animals():
@@ -18,36 +16,28 @@ def list_animals():
     ignores capitalization. The response includes the current page, total
     pages, and total results so the browser can build the paging controls.
     """
-    # Read every filter the visitor entered; empty values are ignored below.
     filters = {key: request.args.get(key, "").strip() for key in ("search", "species", "breed", "age", "size", "gender", "status")}
     conditions, values = [], []
     for key, value in filters.items():
         if value:
             if key == "search":
-                # Lowercase both sides so searches match regardless of capitalization
-                # in SQLite locally or PostgreSQL on Vercel.
                 conditions.append("(LOWER(name) LIKE LOWER(?) OR LOWER(breed) LIKE LOWER(?) OR LOWER(description) LIKE LOWER(?))")
                 values.extend([f"%{value}%"] * 3)
             elif key == "age":
                 conditions.append("LOWER(age) LIKE LOWER(?)")
                 values.append(f"%{value}%")
             elif key == "gender":
-                # Match a selected gender exactly: a partial search for "Male"
-                # would otherwise also match "Female" because it contains it.
                 conditions.append("LOWER(gender) = LOWER(?)")
                 values.append(value)
             else:
                 conditions.append(f"LOWER({key}) LIKE LOWER(?)")
                 values.append(f"%{value}%")
-    # Apply all chosen filters together, then count the full matching result set
-    # before loading only the requested page of animals.
     where = " WHERE " + " AND ".join(conditions) if conditions else ""
     page_size = 12
     page = max(1, request.args.get("page", 1, type=int) or 1)
     with db() as conn:
         total = conn.execute(f"SELECT COUNT(*) AS total FROM animals{where}", values).fetchone()["total"]
         pages = max(1, (total + page_size - 1) // page_size)
-        # Clamp stale page numbers after filtering or removing the last animal on a page.
         page = min(page, pages)
         animals = conn.execute(
             f"""SELECT animals.*,
@@ -57,7 +47,6 @@ def list_animals():
             (*values, page_size, (page - 1) * page_size),
         ).fetchall()
     return jsonify(animals=[dict(row) for row in animals], page=page, pages=pages, total=total)
-
 
 @bp.get("/api/animals/<int:animal_id>")
 def animal_detail(animal_id):
@@ -78,7 +67,6 @@ def animal_detail(animal_id):
         return jsonify(error="Animal not found."), 404
     return jsonify(animal=dict(animal))
 
-
 @bp.get("/api/animals/options")
 def animal_options():
     """Return the short animal list used by the contact form dropdown.
@@ -90,7 +78,6 @@ def animal_options():
         rows = conn.execute("SELECT id, name FROM animals ORDER BY name").fetchall()
     return jsonify(animals=[dict(row) for row in rows])
 
-
 @bp.route("/api/favorites/<int:animal_id>", methods=["POST", "DELETE"])
 @login_required
 def favorite(animal_id):
@@ -101,11 +88,13 @@ def favorite(animal_id):
     """
     with db() as conn:
         if request.method == "POST":
-            conn.execute("INSERT OR IGNORE INTO favorites(user_id,animal_id) VALUES(?,?)", (session["user_id"], animal_id))
+            conn.execute(
+                "INSERT INTO favorites(user_id,animal_id) VALUES(?,?) ON CONFLICT (user_id,animal_id) DO NOTHING",
+                (session["user_id"], animal_id),
+            )
         else:
             conn.execute("DELETE FROM favorites WHERE user_id=? AND animal_id=?", (session["user_id"], animal_id))
     return jsonify(ok=True)
-
 
 @bp.get("/api/favorites")
 @login_required
@@ -118,6 +107,3 @@ def list_favorites():
     with db() as conn:
         rows = conn.execute("SELECT a.* FROM animals a JOIN favorites f ON a.id=f.animal_id WHERE f.user_id=?", (session["user_id"],)).fetchall()
     return jsonify(animals=[dict(row) for row in rows])
-
-
-

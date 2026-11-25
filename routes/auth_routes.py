@@ -1,7 +1,5 @@
 """Registration, login, session, and profile API routes."""
 
-import sqlite3
-
 from flask import Blueprint, jsonify, session
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -9,8 +7,6 @@ from database import db
 from shelter_helpers import current_user, insert_id, json_body, login_required
 
 bp = Blueprint("auth", __name__)
-# The @bp.post/get/patch lines below are decorators: they tell Flask which URL
-# and HTTP method should call each function. bp is this file's route collection.
 
 @bp.post("/api/register")
 def register():
@@ -23,7 +19,6 @@ def register():
     account is signed in immediately and its public profile is returned.
     """
     data = json_body()
-    # Normalize email so capitalization and extra spaces do not create separate accounts.
     email, password = data.get("email", "").strip().lower(), data.get("password", "")
     if not email or len(password) < 8:
         return jsonify(error="Enter an email and a password of at least 8 characters."), 400
@@ -31,12 +26,11 @@ def register():
         with db() as conn:
             user_id = insert_id(conn, "INSERT INTO users(email,password,role,name) VALUES(?,?,?,?)", (email, generate_password_hash(password), "user", data.get("name", "")))
     except Exception as error:
-        if isinstance(error, sqlite3.IntegrityError) or "unique" in str(error).lower():
+        if "unique" in str(error).lower():
             return jsonify(error="An account with that email already exists."), 409
         raise
     session["user_id"] = user_id
     return jsonify(user=current_user())
-
 
 @bp.post("/api/login")
 def login():
@@ -54,19 +48,16 @@ def login():
     session["user_id"] = user["id"]
     return jsonify(user=current_user())
 
-
 @bp.post("/api/logout")
 def logout():
     """Forget which account is signed in by clearing the session cookie data."""
     session.clear()
     return jsonify(ok=True)
 
-
 @bp.get("/api/me")
 def me():
     """Let the browser check whether this visitor has an active login session."""
     return jsonify(user=current_user())
-
 
 @bp.patch("/api/profile")
 @login_required
@@ -79,13 +70,9 @@ def update_profile():
     """
     data = json_body()
     allowed = ("name", "phone", "address", "experience", "pets")
-    # Build a dictionary containing only fields the account owner may edit.
     fields = {key: data[key] for key in allowed if key in data}
     if fields:
         sql = ",".join(f"{key}=?" for key in fields)
         with db() as conn:
             conn.execute(f"UPDATE users SET {sql} WHERE id=?", (*fields.values(), session["user_id"]))
     return jsonify(user=current_user())
-
-
-

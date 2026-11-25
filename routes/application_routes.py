@@ -6,7 +6,6 @@ from database import db
 from shelter_helpers import current_user, insert_id, json_body, login_required
 
 bp = Blueprint("applications", __name__)
-# These route decorators connect the form-related URLs to the functions below.
 
 @bp.route("/api/applications", methods=["GET", "POST"])
 @login_required
@@ -15,7 +14,7 @@ def applications():
 
     GET loads the signed-in account's application history for My Account. POST
     reads the form fields, checks the required answers, saves a new application,
-    and returns its ID and initial Submitted status to the browser.
+    and returns its ID and initial In Review status to the browser.
     """
     if request.method == "GET":
         with db() as conn:
@@ -69,14 +68,12 @@ def applications():
         conn.execute("UPDATE animals SET status='Pending' WHERE id=?", (data["animal_id"],))
     return jsonify(id=item_id, status="In Review"), 201
 
-
 @bp.get("/api/opportunities")
 def opportunities():
     """Return the volunteer roles and schedules displayed on the Help section."""
     with db() as conn:
         rows = conn.execute("SELECT * FROM opportunities ORDER BY id").fetchall()
     return jsonify(opportunities=[dict(row) for row in rows])
-
 
 @bp.post("/api/volunteers")
 @login_required
@@ -105,7 +102,6 @@ def volunteer_apply():
         )
     return jsonify(id=item_id, status="Submitted"), 201
 
-
 @bp.post("/api/contact")
 @login_required
 def contact():
@@ -122,7 +118,6 @@ def contact():
         conn.execute("INSERT INTO messages(user_id,name,email,animal_id,message) VALUES(?,?,?,?,?)", (user["id"] if user else None, data["name"], data["email"], data.get("animal_id") or None, data["message"]))
     return jsonify(message="Your message has been sent."), 201
 
-
 @bp.get("/api/messages")
 @login_required
 def my_messages():
@@ -130,6 +125,3 @@ def my_messages():
     with db() as conn:
         rows = conn.execute("SELECT m.*, a.name AS animal_name FROM messages m LEFT JOIN animals a ON a.id=m.animal_id WHERE m.user_id=? ORDER BY m.created_at DESC", (session["user_id"],)).fetchall()
     return jsonify(messages=[dict(row) for row in rows])
-
-
-

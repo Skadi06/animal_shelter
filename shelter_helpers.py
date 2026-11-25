@@ -13,13 +13,7 @@ from urllib.request import Request, urlopen
 from flask import jsonify, request, session
 from werkzeug.utils import secure_filename
 
-from database import DATABASE_URL, db
-
-# These are the account types the website understands. They are used when a
-# visitor registers and when a route checks whether someone may manage data.
-ROLES = {"user", "staff", "administrator"}
-# Only these animal fields are accepted from the staff edit form. Keeping this
-# list here prevents an incoming form from changing unrelated database columns.
+from database import db
 ANIMAL_FIELDS = (
     "name", "species", "breed", "age", "gender", "size", "description",
     "status", "photo", "vaccinated", "spayed_neutered", "dietary_needs",
@@ -41,7 +35,6 @@ def current_user():
         row = conn.execute("SELECT id,email,role,name,phone,address,experience,pets FROM users WHERE id=?", (user_id,)).fetchone()
     return dict(row) if row else None
 
-
 def login_required(fn):
     """Protect a route so only a signed-in visitor can use it.
 
@@ -56,7 +49,6 @@ def login_required(fn):
             return jsonify(error="Please log in first."), 401
         return fn(*args, **kwargs)
     return wrapped
-
 
 def roles_required(*roles):
     """Protect a route so only logged-in accounts with a listed role can use it.
@@ -76,7 +68,6 @@ def roles_required(*roles):
         return wrapped
     return decorate
 
-
 def json_body():
     """Read JSON sent by the browser and always give routes a dictionary.
 
@@ -86,18 +77,14 @@ def json_body():
     """
     return request.get_json(silent=True) or {}
 
-
 def insert_id(conn, sql, values):
     """Insert one database row and return the ID assigned to that new row.
 
-    PostgreSQL returns the ID through ``RETURNING id``. SQLite puts it on the
-    cursor as ``lastrowid``. This helper hides that difference from route code.
-    ``conn`` is the open connection; ``sql`` is the INSERT statement; and
-    ``values`` contains the data to insert.
+    PostgreSQL returns the new ID through ``RETURNING id``. ``conn`` is the
+    open connection; ``sql`` is the INSERT statement; and ``values`` contains
+    the data to insert.
     """
-    cursor = conn.execute(sql + (" RETURNING id" if DATABASE_URL else ""), values)
-    return cursor.fetchone()["id"] if DATABASE_URL else cursor.lastrowid
-
+    return conn.execute(sql + " RETURNING id", values).fetchone()["id"]
 
 def clean_animal(data):
     """Create an animal dictionary containing only fields the app supports.
@@ -107,7 +94,6 @@ def clean_animal(data):
     part of a generated SQL statement.
     """
     return {key: data.get(key, "") for key in ANIMAL_FIELDS}
-
 
 def storage_call(path, method="GET", body=None, content_type="application/json"):
     """Send a request to Supabase Storage to check a bucket or transfer a file.
@@ -143,7 +129,6 @@ def storage_call(path, method="GET", body=None, content_type="application/json")
     except URLError as error:
         raise ValueError(f"Could not reach Supabase Storage: {error.reason}") from error
 
-
 def upload_animal_photo(photo):
     """Check an uploaded animal image, store it, and return its public URL.
 
@@ -172,6 +157,3 @@ def upload_animal_photo(photo):
     storage_call(f"object/{bucket}/{quote(object_name)}", "POST", photo.read(), content_type)
     project_url = os.environ["SUPABASE_URL"].rstrip("/")
     return f"{project_url}/storage/v1/object/public/{bucket}/{object_name}"
-
-
-

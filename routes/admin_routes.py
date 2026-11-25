@@ -6,8 +6,6 @@ from database import db
 from shelter_helpers import clean_animal, insert_id, json_body, roles_required, upload_animal_photo
 
 bp = Blueprint("admin", __name__)
-# The route decorators connect staff URLs to functions below. @roles_required
-# is another decorator: it checks the current account before the route runs.
 
 @bp.get("/api/admin/applications")
 @roles_required("staff", "administrator")
@@ -30,7 +28,6 @@ def admin_applications():
         ).fetchall()
         volunteers = conn.execute("SELECT * FROM volunteer_applications ORDER BY created_at DESC").fetchall()
     return jsonify(adoptions=[dict(r) for r in adoptions], volunteers=[dict(r) for r in volunteers])
-
 
 @bp.patch("/api/admin/applications/<kind>/<int:item_id>")
 @roles_required("staff", "administrator")
@@ -78,7 +75,6 @@ def update_application(kind, item_id):
                 )
     return jsonify(ok=True)
 
-
 @bp.get("/api/admin/messages")
 @roles_required("staff", "administrator")
 def admin_messages():
@@ -86,7 +82,6 @@ def admin_messages():
     with db() as conn:
         rows = conn.execute("SELECT m.*, a.name AS animal_name FROM messages m LEFT JOIN animals a ON a.id=m.animal_id ORDER BY m.created_at DESC").fetchall()
     return jsonify(messages=[dict(row) for row in rows])
-
 
 @bp.patch("/api/admin/messages/<int:message_id>")
 @roles_required("staff", "administrator")
@@ -96,7 +91,6 @@ def reply_message(message_id):
     with db() as conn:
         conn.execute("UPDATE messages SET reply=? WHERE id=?", (reply, message_id))
     return jsonify(ok=True)
-
 
 @bp.route("/api/admin/animals", defaults={"animal_id": None}, methods=["POST"])
 @bp.route("/api/admin/animals/<int:animal_id>", methods=["PUT", "DELETE"])
@@ -109,7 +103,6 @@ def manage_animal(animal_id):
     If an edit does not include a replacement photo, the current photo stays.
     The role decorator permits only staff and administrator accounts.
     """
-    # Preserve the current image on edits when no replacement is uploaded.
     with db() as conn:
         if request.method == "DELETE":
             conn.execute("DELETE FROM animals WHERE id=?", (animal_id,))
@@ -138,6 +131,3 @@ def manage_animal(animal_id):
         assignments = ",".join(f"{key}=?" for key in animal)
         conn.execute(f"UPDATE animals SET {assignments} WHERE id=?", (*animal.values(), animal_id))
         return jsonify(ok=True)
-
-
-
