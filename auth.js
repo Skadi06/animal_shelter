@@ -277,7 +277,7 @@ $("#application-form").onsubmit = async (event) => {
   event.preventDefault();
   try {
     const result = await api("applications", { body: formData(event.currentTarget) });
-    showMessage($("#application-message"), `Application #${result.id} submitted. You can track it in My Account.`);
+    showMessage($("#application-message"), "Application submitted. You can track it in My Account.");
     await loadAccount();
     setTimeout(() => $("#application-dialog").close(), 900);
   } catch (error) { showMessage($("#application-message"), error.message, true); }
@@ -296,7 +296,7 @@ $("#volunteer-form").onsubmit = async (event) => {
   if (!user) { $("#login-button").click(); return; }
   try {
     const result = await api("volunteers", { body: formData(form) });
-    showMessage($("#volunteer-message"), `Volunteer application #${result.id} submitted.`);
+    showMessage($("#volunteer-message"), "Volunteer application submitted.");
     await loadAccount();
   } catch (error) { showMessage($("#volunteer-message"), error.message, true); }
 };
