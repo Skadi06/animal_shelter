@@ -42,6 +42,17 @@ def applications():
     if any(not data.get(field) for field in required):
         return jsonify(error="Please complete all required application fields."), 400
     with db() as conn:
+        animal = conn.execute(
+            """SELECT status,
+                      EXISTS(SELECT 1 FROM adoptions a
+                             WHERE a.animal_id=animals.id AND a.status='In Review') AS in_review
+               FROM animals WHERE id=?""",
+            (data["animal_id"],),
+        ).fetchone()
+        if not animal or animal["status"] != "Available":
+            return jsonify(error="This animal is not currently available for adoption."), 409
+        if animal["in_review"]:
+            return jsonify(error="This animal already has an application in review."), 409
         item_id = insert_id(
             conn,
             """

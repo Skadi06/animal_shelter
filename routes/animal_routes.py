@@ -50,7 +50,10 @@ def list_animals():
         # Clamp stale page numbers after filtering or removing the last animal on a page.
         page = min(page, pages)
         animals = conn.execute(
-            f"SELECT * FROM animals{where} ORDER BY id DESC LIMIT ? OFFSET ?",
+            f"""SELECT animals.*,
+                       EXISTS(SELECT 1 FROM adoptions a
+                              WHERE a.animal_id=animals.id AND a.status='In Review') AS in_review
+                FROM animals{where} ORDER BY id DESC LIMIT ? OFFSET ?""",
             (*values, page_size, (page - 1) * page_size),
         ).fetchall()
     return jsonify(animals=[dict(row) for row in animals], page=page, pages=pages, total=total)
@@ -64,7 +67,13 @@ def animal_detail(animal_id):
     does not exist, return HTTP 404 so the browser knows there is no profile.
     """
     with db() as conn:
-        animal = conn.execute("SELECT * FROM animals WHERE id=?", (animal_id,)).fetchone()
+        animal = conn.execute(
+            """SELECT animals.*,
+                      EXISTS(SELECT 1 FROM adoptions a
+                             WHERE a.animal_id=animals.id AND a.status='In Review') AS in_review
+               FROM animals WHERE id=?""",
+            (animal_id,),
+        ).fetchone()
     if not animal:
         return jsonify(error="Animal not found."), 404
     return jsonify(animal=dict(animal))
