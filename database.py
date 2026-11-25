@@ -172,6 +172,15 @@ def init_db():
         for statement in schema.split(";"):
             if statement.strip():
                 conn.execute(statement)
+        # Adoption applications enter staff review as soon as they are sent.
+        # Upgrade older records that still use the former Submitted status.
+        conn.execute("UPDATE adoptions SET status='In Review' WHERE status='Submitted'")
+        conn.execute(
+            """UPDATE animals SET status='Pending'
+               WHERE status='Available' AND id IN (
+                   SELECT animal_id FROM adoptions WHERE status='In Review'
+               )"""
+        )
         # Upgrade databases created before account-linked questions and the
         # regular-user role were introduced.
         user_columns = {row["name"] for row in conn.execute("PRAGMA table_info(users)").fetchall()} if not DATABASE_URL else {row["column_name"] for row in conn.execute("SELECT column_name FROM information_schema.columns WHERE table_name='users'").fetchall()}

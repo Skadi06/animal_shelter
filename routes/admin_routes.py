@@ -43,7 +43,8 @@ def update_application(kind, item_id):
     """
     table = {"adoption": "adoptions", "volunteer": "volunteer_applications"}.get(kind)
     status = json_body().get("status")
-    if not table or status not in {"Submitted", "In Review", "Approved", "Declined"}:
+    valid_statuses = {"In Review", "Approved", "Declined"} if kind == "adoption" else {"Submitted", "In Review", "Approved", "Declined"}
+    if not table or status not in valid_statuses:
         return jsonify(error="Invalid application type or status."), 400
     with db() as conn:
         animal_id = None
@@ -61,6 +62,18 @@ def update_application(kind, item_id):
                 "UPDATE animals SET status=? WHERE id=?",
                 (animal_status, animal_id),
             )
+        elif animal_id and status == "Declined":
+            other_active_application = conn.execute(
+                """SELECT 1 FROM adoptions
+                   WHERE animal_id=? AND id<>? AND status IN ('In Review', 'Approved')
+                   LIMIT 1""",
+                (animal_id, item_id),
+            ).fetchone()
+            if not other_active_application:
+                conn.execute(
+                    "UPDATE animals SET status='Available' WHERE id=? AND status='Pending'",
+                    (animal_id,),
+                )
     return jsonify(ok=True)
 
 

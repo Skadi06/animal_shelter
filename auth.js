@@ -176,7 +176,11 @@ async function loadAdminApplications() {
     ...result.adoptions.map((item) => ({ ...item, kind: "adoption", label: `Adoption · ${item.animal_name}`, applicant: item.name })),
     ...result.volunteers.map((item) => ({ ...item, kind: "volunteer", label: "Volunteer application", applicant: item.name }))
   ];
-  $("#admin-application-list").innerHTML = all.length ? all.map((item) => `<article class="application-item"><strong>#${item.id} · ${escapeHtml(item.label)}</strong><span>${escapeHtml(item.applicant)} · ${escapeHtml(item.email)}</span><select data-status-kind="${item.kind}" data-status-id="${item.id}">${["Submitted", "In Review", "Approved", "Declined"].map((status) => `<option ${status === item.status ? "selected" : ""}>${status}</option>`).join("")}</select><small>Submitted ${escapeHtml(item.created_at)}</small></article>`).join("") : `<p class="empty-state">No applications have been submitted yet.</p>`;
+  $("#admin-application-list").innerHTML = all.length ? all.map((item) => {
+    const statuses = item.kind === "adoption" ? ["In Review", "Approved", "Declined"] : ["Submitted", "In Review", "Approved", "Declined"];
+    const selectedStatus = item.kind === "adoption" && item.status === "Submitted" ? "In Review" : item.status;
+    return `<article class="application-item"><strong>#${item.id} · ${escapeHtml(item.label)}</strong><span>${escapeHtml(item.applicant)} · ${escapeHtml(item.email)}</span><select data-status-kind="${item.kind}" data-status-id="${item.id}">${statuses.map((status) => `<option ${status === selectedStatus ? "selected" : ""}>${status}</option>`).join("")}</select><small>Submitted ${escapeHtml(item.created_at)}</small></article>`;
+  }).join("") : `<p class="empty-state">No applications have been submitted yet.</p>`;
   const { messages } = await api("admin/messages", { method: "GET" });
   $("#admin-message-list").innerHTML = messages.length ? messages.map((item) => `<article class="application-item"><strong>${escapeHtml(item.name)} · ${escapeHtml(item.email)}${item.animal_name ? ` · ${escapeHtml(item.animal_name)}` : ""}</strong><p>${escapeHtml(item.message)}</p><label>Reply<textarea data-message-reply="${item.id}" rows="2">${escapeHtml(item.reply || "")}</textarea></label><button type="button" data-send-reply="${item.id}">Save reply</button><small>${escapeHtml(item.created_at)}</small></article>`).join("") : `<p class="empty-state">No customer questions yet.</p>`;
 }

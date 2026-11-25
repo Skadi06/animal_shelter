@@ -57,8 +57,8 @@ def applications():
             conn,
             """
             INSERT INTO adoptions
-                (user_id, animal_id, name, email, phone, housing, other_pets, experience)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                (user_id, animal_id, name, email, phone, housing, other_pets, experience, status)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'In Review')
             """,
             (
                 user["id"], data["animal_id"], data["name"], data["email"],
@@ -66,7 +66,8 @@ def applications():
                 data["experience"],
             ),
         )
-    return jsonify(id=item_id, status="Submitted"), 201
+        conn.execute("UPDATE animals SET status='Pending' WHERE id=?", (data["animal_id"],))
+    return jsonify(id=item_id, status="In Review"), 201
 
 
 @bp.get("/api/opportunities")
