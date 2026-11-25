@@ -107,7 +107,7 @@ async function loadAccount() {
       ...(result.applications || []).map((item) => ({ ...item, kind: "Adoption", subject: item.animal_name || "Animal" })),
       ...(result.volunteer_applications || []).map((item) => ({ ...item, kind: "Volunteer", subject: "Volunteer application" }))
     ];
-    $("#application-list").innerHTML = tracked.length ? tracked.map((item) => `<article class="application-item"><strong>${item.kind} application #${item.id} · ${escapeHtml(item.subject)}</strong><span>Review status: ${escapeHtml(item.status)}</span>${item.adoption_status ? `<span>Animal status: ${escapeHtml(item.adoption_status)}</span>` : ""}<small>Submitted ${escapeHtml(item.created_at)}</small></article>`).join("") : `<p class="empty-state">Your adoption and volunteer applications will appear here.</p>`;
+    $("#application-list").innerHTML = tracked.length ? tracked.map((item) => `<article class="application-item"><strong>${item.kind === "Volunteer" ? "Volunteer application" : `Adoption application · ${escapeHtml(item.subject)}`}</strong><span>Review status: ${escapeHtml(item.status)}</span>${item.adoption_status ? `<span>Animal status: ${escapeHtml(item.adoption_status)}</span>` : ""}<small>Submitted ${escapeHtml(item.created_at)}</small></article>`).join("") : `<p class="empty-state">Your adoption and volunteer applications will appear here.</p>`;
   } catch (error) {
     $("#application-list").textContent = `Could not load your applications: ${error.message}`;
   }
