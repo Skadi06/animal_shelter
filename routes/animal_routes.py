@@ -52,7 +52,7 @@ def list_animals():
         animals = conn.execute(
             f"""SELECT animals.*,
                        EXISTS(SELECT 1 FROM adoptions a
-                              WHERE a.animal_id=animals.id AND a.status='In Review') AS in_review
+                              WHERE a.animal_id=animals.id AND a.status IN ('In Review', 'Approved')) AS adoption_on_hold
                 FROM animals{where} ORDER BY id DESC LIMIT ? OFFSET ?""",
             (*values, page_size, (page - 1) * page_size),
         ).fetchall()
@@ -70,7 +70,7 @@ def animal_detail(animal_id):
         animal = conn.execute(
             """SELECT animals.*,
                       EXISTS(SELECT 1 FROM adoptions a
-                             WHERE a.animal_id=animals.id AND a.status='In Review') AS in_review
+                             WHERE a.animal_id=animals.id AND a.status IN ('In Review', 'Approved')) AS adoption_on_hold
                FROM animals WHERE id=?""",
             (animal_id,),
         ).fetchone()

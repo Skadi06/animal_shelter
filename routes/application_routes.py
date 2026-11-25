@@ -45,14 +45,14 @@ def applications():
         animal = conn.execute(
             """SELECT status,
                       EXISTS(SELECT 1 FROM adoptions a
-                             WHERE a.animal_id=animals.id AND a.status='In Review') AS in_review
+                             WHERE a.animal_id=animals.id AND a.status IN ('In Review', 'Approved')) AS adoption_on_hold
                FROM animals WHERE id=?""",
             (data["animal_id"],),
         ).fetchone()
         if not animal or animal["status"] != "Available":
             return jsonify(error="This animal is not currently available for adoption."), 409
-        if animal["in_review"]:
-            return jsonify(error="This animal already has an application in review."), 409
+        if animal["adoption_on_hold"]:
+            return jsonify(error="This animal already has an application in review or approved."), 409
         item_id = insert_id(
             conn,
             """
