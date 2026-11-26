@@ -5,7 +5,7 @@
 
 import os
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
-DATABASE_URL = os.environ.get("DATABASE_URL") or os.environ.get("POSTGRES_URL")
+DATABASE_URL = os.environ.get("POSTGRES_URL")
 
 class Database:
     # Provide a PostgreSQL connection with dictionary-style result rows.

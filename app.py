@@ -9,7 +9,7 @@ from animals import bp as animal_blueprint
 from applications import bp as application_blueprint
 from admin import bp as admin_blueprint
 app = Flask(__name__)
-app.secret_key = "local-shelter-demo-key"
+app.secret_key = "animal-shelter-key"
 app.config["MAX_CONTENT_LENGTH"] = 8 * 1024 * 1024
 ROOT = Path(__file__).resolve().parent
 _db_ready = False
@@ -24,7 +24,7 @@ def check_database():
     #
     global _db_ready
     if request.path.startswith("/api/") and not DATABASE_URL:
-        return jsonify(error="PostgreSQL is required. Set DATABASE_URL or POSTGRES_URL."), 503
+        return jsonify(error="PostgreSQL is required. Set POSTGRES_URL."), 503
     if request.path.startswith("/api/") and DATABASE_URL and not _db_ready:
         try:
             init_db()
@@ -55,9 +55,10 @@ def website_files(filename):
     # safely finds that file in this project's folder and sends it to the browser.
     #
     return send_from_directory(ROOT, filename)
+
 for blueprint in (auth_blueprint, animal_blueprint, application_blueprint, admin_blueprint):
     app.register_blueprint(blueprint)
 
 if __name__ == "__main__":
     init_db()
-    app.run(debug=True)
+    app.run()
