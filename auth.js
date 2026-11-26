@@ -157,8 +157,6 @@ async function loadUser() {
   user = data.user;
   refreshRoleControls();
   if (user) {
-    $("#contact-message-form").elements.name.value = user.name || "";
-    $("#contact-message-form").elements.email.value = user.email || "";
     await loadAccount();
     await loadAdminApplications();
   }
@@ -350,13 +348,12 @@ $("#animal-form").onsubmit = async (event) => {
   data.delete("id");
   try {
     await api(id ? `admin/animals/${id}` : "admin/animals", { method: id ? "PUT" : "POST", body: data });
-    form.reset();
-    $("#animal-form-title").textContent = "Add an animal";
+    resetAnimalForm();
     showMessage($("#animal-message"), id ? "Animal updated successfully." : "Animal added successfully.");
     await loadAnimals();
   } catch (error) { showMessage($("#animal-message"), error.message, true); }
 };
-$("#animal-cancel").onclick = () => { $("#animal-form").reset(); $("#animal-form-title").textContent = "Add an animal"; };
+$("#animal-cancel").onclick = resetAnimalForm;
 $("#admin-application-list").onchange = async (event) => {
   const select = event.target.closest("[data-status-kind]");
   if (!select) return;

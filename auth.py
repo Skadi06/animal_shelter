@@ -1,7 +1,6 @@
 # Registration, login, session, and profile API routes.
 
 from flask import Blueprint, jsonify, session
-from werkzeug.security import check_password_hash, generate_password_hash
 
 from database import db
 from helpers import current_user, insert_id, json_body, login_required
@@ -14,9 +13,8 @@ def register():
     #
     # The browser sends an email, password, and name. Public registration always
     # creates a regular user; privileged roles are assigned in the database.
-    # The password is turned into a one-way hash before it is saved, so the
-    # database does not store the password text itself. On success, the new
-    # account is signed in immediately and its public profile is returned.
+    # The password is saved as submitted. On success, the new account is signed
+    # in immediately and its public profile is returned.
     #
     data = json_body()
     email, password = data.get("email", "").strip().lower(), data.get("password", "")
@@ -24,7 +22,7 @@ def register():
         return jsonify(error="Enter an email and a password of at least 8 characters."), 400
     try:
         with db() as conn:
-            user_id = insert_id(conn, "INSERT INTO users(email,password,role,name) VALUES(?,?,?,?)", (email, generate_password_hash(password), "user", data.get("name", "")))
+            user_id = insert_id(conn, "INSERT INTO users(email,password,role,name) VALUES(?,?,?,?)", (email, password, "user", data.get("name", "")))
     except Exception as error:
         if "unique" in str(error).lower():
             return jsonify(error="An account with that email already exists."), 409
@@ -36,14 +34,14 @@ def register():
 def login():
     # Sign in an existing account using the submitted email and password.
     #
-    # The email is normalized just like it is during registration. The stored
-    # password hash is checked against the submitted password; when it matches,
-    # the account ID is put in the browser session for later requests.
+    # Compare the submitted password with the value stored for this account.
     #
     data = json_body()
+    password = data.get("password", "")
     with db() as conn:
         user = conn.execute("SELECT * FROM users WHERE email=?", (data.get("email", "").strip().lower(),)).fetchone()
-    if not user or not check_password_hash(user["password"], data.get("password", "")):
+        password_matches = user and user["password"] == password
+    if not user or not password_matches:
         return jsonify(error="Email or password is incorrect."), 401
     session["user_id"] = user["id"]
     return jsonify(user=current_user())

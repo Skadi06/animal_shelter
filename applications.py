@@ -113,9 +113,8 @@ def contact():
     data, user = json_body(), current_user()
     if not data.get("message"):
         return jsonify(error="Please enter a message."), 400
-    data["name"], data["email"] = user["name"], user["email"]
     with db() as conn:
-        conn.execute("INSERT INTO messages(user_id,name,email,animal_id,message) VALUES(?,?,?,?,?)", (user["id"] if user else None, data["name"], data["email"], data.get("animal_id") or None, data["message"]))
+        conn.execute("INSERT INTO messages(user_id,name,email,animal_id,message) VALUES(?,?,?,?,?)", (user["id"], user["name"], user["email"], data.get("animal_id") or None, data["message"]))
     return jsonify(message="Your message has been sent."), 201
 
 @bp.get("/api/messages")

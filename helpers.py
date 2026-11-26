@@ -10,7 +10,7 @@ from urllib.parse import quote
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
-from flask import jsonify, request, session
+from flask import g, jsonify, request, session
 from werkzeug.utils import secure_filename
 
 from database import db
@@ -28,12 +28,16 @@ def current_user():
     # password out of the returned data. It returns ``None`` when no account is
     # signed in or the saved ID no longer belongs to an account.
     #
+    if hasattr(g, "current_user"):
+        return g.current_user
     user_id = session.get("user_id")
     if not user_id:
+        g.current_user = None
         return None
     with db() as conn:
         row = conn.execute("SELECT id,email,role,name,phone,address,experience,pets FROM users WHERE id=?", (user_id,)).fetchone()
-    return dict(row) if row else None
+    g.current_user = dict(row) if row else None
+    return g.current_user
 
 def login_required(fn):
     # Protect a route so only a signed-in visitor can use it.
@@ -59,10 +63,11 @@ def roles_required(*roles):
     def decorate(fn):
         # Build the wrapper that will be attached to the decorated route.
         @wraps(fn)
-        @login_required
         def wrapped(*args, **kwargs):
-            # Check the account role before the original route can run.
-            if current_user()["role"] not in roles:
+            user = current_user()
+            if not user:
+                return jsonify(error="Please log in first."), 401
+            if user["role"] not in roles:
                 return jsonify(error="You don't have permission to do that."), 403
             return fn(*args, **kwargs)
         return wrapped
