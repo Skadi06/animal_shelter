@@ -75,7 +75,7 @@ function refreshRoleControls() {
 function animalCard(animal) {
   const saved = savedAnimalIds.has(Number(animal.id));
   return `<article class="animal-card">
-    <img src="${escapeHtml(animal.photo || "https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=800")}" alt="${escapeHtml(animal.name)}" loading="lazy">
+    <img src="${escapeHtml(animal.photo || "/img/twodog.jpg")}" alt="${escapeHtml(animal.name)}" loading="lazy">
     <div class="animal-info"><div><h3>${escapeHtml(animal.name)}</h3><p>${escapeHtml(animal.breed)} · ${escapeHtml(animal.gender)}</p></div><span class="age">${escapeHtml(displayAge(animal.age))}</span></div>
     <p class="animal-summary">${escapeHtml(animal.description)}</p><span class="status-badge status-${escapeHtml(animal.status.toLowerCase())}">${escapeHtml(animal.status)}</span>
     <div class="animal-actions"><button class="secondary-button" data-detail="${animal.id}">View profile</button><button class="secondary-button favorite-button" data-favorite="${animal.id}" aria-pressed="${saved}">${saved ? "♥ Saved" : "♡ Save"}</button>${animal.status === "Available" && !animal.adoption_on_hold ? `<button class="primary-button" data-adopt="${animal.id}">Apply to adopt</button>` : ""}</div>
