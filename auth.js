@@ -1,3 +1,5 @@
+//Tom Gao, Dingzhen Yu
+// Shared page state: the signed-in user, animal results, favorites, and listing page.
 const $ = (selector) => document.querySelector(selector);
 const authDialog = $("#auth-dialog");
 let user = null;
@@ -6,11 +8,13 @@ let savedAnimalIds = new Set();
 let animalPage = 1;
 let signupMode = false;
 const escapeHtml = (value = "") => String(value).replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char]));
+// Convert ordinary form fields to an object; file uploads use FormData directly.
 const formData = (form) => Object.fromEntries(
   Array.from(form.elements)
     .filter((field) => field.name && !field.disabled && field.type !== "file")
     .map((field) => [field.name, field.value])
 );
+// Send a request to Flask and return its JSON result or a readable error.
 async function api(path, options = {}) {
   const method = options.method || (options.body ? "POST" : "GET");
   const isFormData = options.body instanceof FormData;
@@ -31,6 +35,7 @@ async function api(path, options = {}) {
   return data;
 }
 
+// Update a form or page status message and mark whether it represents an error.
 function showMessage(element, text, error = false) {
   element.textContent = text;
   element.dataset.error = String(error);
@@ -44,6 +49,7 @@ function resetAnimalForm() {
   showMessage($("#animal-message"), "");
 }
 
+// Show or hide account and staff controls based on the current user's role.
 function refreshRoleControls() {
   $("#login-button").textContent = user ? `${user.role[0].toUpperCase()}${user.role.slice(1)} · Log Out` : "Log In";
   $("#account-panel").hidden = !user;
@@ -65,6 +71,7 @@ function refreshRoleControls() {
   }
 }
 
+// Build one animal listing card, including actions allowed for this user.
 function animalCard(animal) {
   const saved = savedAnimalIds.has(Number(animal.id));
   return `<article class="animal-card">
@@ -75,6 +82,7 @@ function animalCard(animal) {
     ${user && ["staff", "administrator"].includes(user.role) ? `<div class="admin-animal-actions"><button data-edit="${animal.id}">Edit</button><button data-delete="${animal.id}">Remove</button></div>` : ""}</article>`;
 }
 
+// Load the current filter results from the API and update the listing and pager.
 async function loadAnimals(page = animalPage) {
   const filters = new URLSearchParams(formData($("#animal-filters")));
   filters.set("page", page);
@@ -97,6 +105,7 @@ async function loadOpportunities() {
   $("#opportunity-grid").innerHTML = opportunities.map((item) => `<article class="help-card"><div>🤝</div><h3>${escapeHtml(item.title)}</h3><p>${escapeHtml(item.description)}</p><p><strong>Schedule:</strong> ${escapeHtml(item.schedule)}</p></article>`).join("");
 }
 
+// Load the signed-in user's profile, applications, saved animals, and messages.
 async function loadAccount() {
   if (!user) return;
   const profileForm = $("#profile-form");
@@ -124,6 +133,7 @@ async function loadAccount() {
   if (messages) $("#message-list").innerHTML = messages.messages.length ? messages.messages.map((item) => `<article class="application-item"><strong>${escapeHtml(item.animal_name || "General question")}</strong><p>${escapeHtml(item.message)}</p><span>${item.reply ? `Shelter reply: ${escapeHtml(item.reply)}` : "Waiting for a shelter response"}</span><small>${escapeHtml(item.created_at)}</small></article>`).join("") : `<p class="empty-state">Questions you send while signed in and shelter replies will appear here.</p>`;
 }
 
+// Load the staff queues and render application status controls and message replies.
 async function loadAdminApplications() {
   if (!user || !["staff", "administrator"].includes(user.role)) return;
   const result = await api("admin/applications", { method: "GET" });
@@ -152,6 +162,7 @@ async function refreshAdminApplications() {
   }
 }
 
+// Restore the login state when the page opens, then refresh role-specific content.
 async function loadUser() {
   const data = await api("me", { method: "GET" });
   user = data.user;
@@ -162,6 +173,7 @@ async function loadUser() {
   }
   await loadAnimals();
 }
+// The main login button opens the dialog or logs out the current user.
 $("#login-button").onclick = async () => {
   if (user) {
     await api("logout", { body: {} });
@@ -195,6 +207,7 @@ $("#admin-panel").addEventListener("close", resetAnimalForm);
 document.querySelectorAll("[data-close-dialog]").forEach((button) => {
   button.onclick = () => $(`#${button.dataset.closeDialog}`).close();
 });
+// Switch the authentication dialog between login and account registration.
 $("#auth-switch").onclick = (event) => {
   signupMode = !signupMode;
   $("#auth-title").textContent = signupMode ? "Create your account" : "Welcome back";
@@ -205,6 +218,7 @@ $("#auth-switch").onclick = (event) => {
   event.currentTarget.textContent = signupMode ? "Already have an account? Log in" : "Create an account";
   $("#auth-message").textContent = "";
 };
+// Submit login or registration details and refresh the page's user state.
 $("#auth-form").onsubmit = async (event) => {
   event.preventDefault();
   const data = formData(event.currentTarget);
@@ -225,6 +239,7 @@ $("#animal-pagination").onclick = (event) => {
   const pageButton = event.target.closest("[data-page]");
   if (pageButton && !pageButton.disabled) loadAnimals(Number(pageButton.dataset.page)).catch((error) => showMessage($("#animal-feedback"), error.message, true));
 };
+// Handle animal detail, favorite, and adoption actions from the listing cards.
 $("#animal-grid").onclick = async (event) => {
   const detailId = event.target.dataset.detail;
   const favoriteId = event.target.dataset.favorite;
@@ -274,6 +289,7 @@ $("#favorite-list").onclick = async (event) => {
     await loadAnimals(animalPage);
   }
 };
+// Submit adoption applications and refresh the user's account activity.
 $("#application-form").onsubmit = async (event) => {
   event.preventDefault();
   try {
@@ -283,6 +299,7 @@ $("#application-form").onsubmit = async (event) => {
     setTimeout(() => $("#application-dialog").close(), 900);
   } catch (error) { showMessage($("#application-message"), error.message, true); }
 };
+// Save profile changes and update the local user object with the API response.
 $("#profile-form").onsubmit = async (event) => {
   event.preventDefault();
   try {
@@ -291,6 +308,7 @@ $("#profile-form").onsubmit = async (event) => {
     showMessage($("#profile-message"), "Profile saved.");
   } catch (error) { showMessage($("#profile-message"), error.message, true); }
 };
+// Submit a volunteer application for the signed-in user.
 $("#volunteer-form").onsubmit = async (event) => {
   event.preventDefault();
   const form = event.currentTarget;
@@ -304,6 +322,7 @@ $("#volunteer-form").onsubmit = async (event) => {
 
 $("#volunteer-login").onclick = () => $("#login-button").click();
 $("#contact-login").onclick = () => $("#login-button").click();
+// Submit a signed-in user's question, optionally linked to a selected animal.
 $("#contact-message-form").onsubmit = async (event) => {
   event.preventDefault();
   const form = event.currentTarget;
@@ -323,6 +342,7 @@ $("#contact-message-form").onsubmit = async (event) => {
     showMessage($("#contact-message"), "Your message has been sent. Thank you!");
   } catch (error) { showMessage($("#contact-message"), error.message, true); }
 };
+// Staff can open the editor or remove an animal from actions on its card.
 $("#animal-grid").addEventListener("click", async (event) => {
   const editId = event.target.dataset.edit;
   const deleteId = event.target.dataset.delete;
@@ -339,6 +359,7 @@ $("#animal-grid").addEventListener("click", async (event) => {
     await loadAnimals();
   }
 });
+// Create or update an animal, sending multipart data when a photo is attached.
 $("#animal-form").onsubmit = async (event) => {
   event.preventDefault();
   const form = event.currentTarget;
@@ -354,12 +375,14 @@ $("#animal-form").onsubmit = async (event) => {
   } catch (error) { showMessage($("#animal-message"), error.message, true); }
 };
 $("#animal-cancel").onclick = resetAnimalForm;
+// Persist a staff member's selected application status.
 $("#admin-application-list").onchange = async (event) => {
   const select = event.target.closest("[data-status-kind]");
   if (!select) return;
   await api(`admin/applications/${select.dataset.statusKind}/${select.dataset.statusId}`, { method: "PATCH", body: { status: select.value } });
 };
 
+// Save the staff reply entered for a customer message.
 $("#admin-message-list").onclick = async (event) => {
   const button = event.target.closest("[data-send-reply]");
   if (!button) return;
@@ -368,4 +391,5 @@ $("#admin-message-list").onclick = async (event) => {
   await api(`admin/messages/${id}`, { method: "PATCH", body: { reply } });
   await loadAdminApplications();
 };
+// Load independent page data together when the browser finishes reading this file.
 Promise.all([loadUser(), loadOpportunities(), loadAnimalOptions()]).catch((error) => console.error(error));

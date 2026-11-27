@@ -1,4 +1,4 @@
-Tom Gao
+Tom Gao, Dingzhen Yu
 
 # Animal Shelter Website
 
