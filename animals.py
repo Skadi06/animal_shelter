@@ -26,10 +26,18 @@ def list_animals():
                 values.extend([f"%{value}%"] * 3)
             elif key == "age":
                 if value == "10+":
-                    conditions.append("age ~ '(^|[^0-9])([1-9][0-9]+|10)([^0-9]|$)'")
+                    conditions.append("LOWER(age) ~ ?")
+                    values.append(r"^(?:10\+(?:\s*years?(?:\s*old)?)?|(?:10|[1-9][0-9]+)(?:\s+years?(?:\s+old)?)?)$")
+                elif value in {f"{month} month" if month == 1 else f"{month} months" for month in range(1, 12)}:
+                    amount = value.split()[0]
+                    conditions.append("LOWER(age) ~ ?")
+                    values.append(rf"^{amount}\s+months?(?:\s+old)?$")
+                elif value in {str(year) for year in range(1, 10)}:
+                    conditions.append("LOWER(age) ~ ?")
+                    values.append(rf"^{value}(?:\s+years?(?:\s+old)?)?$")
                 else:
-                    conditions.append("age ~ ?")
-                    values.append(f"(^|[^0-9]){value}([^0-9]|$)")
+                    conditions.append("LOWER(age) = LOWER(?)")
+                    values.append(value)
             elif key == "gender":
                 conditions.append("LOWER(gender) = LOWER(?)")
                 values.append(value)
